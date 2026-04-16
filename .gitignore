@@ -12,7 +12,6 @@ CMakeLists_modified.txt
 
 Examples/RGB-D/rgbd_tum
 Examples/RGB-D/rgbd_realsense_D435i
-
 Examples/RGB-D-Inertial/rgbd_inertial_realsense_D435i
 
 Examples/Monocular/mono_realsense_D435i
@@ -39,13 +38,11 @@ Examples/Stereo-Inertial/stereo_inertial_tum_vi
 Examples/Stereo-Inertial/stereo_inertial_realsense_t265
 Examples/Stereo-Inertial/stereo_inertial_realsense_D435i
 
-
-Examples/ROS/ORB_SLAM3/Mono
-Examples/ROS/ORB_SLAM3/Mono_Inertial
-Examples/ROS/ORB_SLAM3/MonoAR
-Examples/ROS/ORB_SLAM3/RGBD
-Examples/ROS/ORB_SLAM3/Stereo
-Examples/ROS/ORB_SLAM3/Stereo_Inertial
+Examples/ROS2/RGB-D-Inertial/install
+Examples/ROS2/RGB-D-Inertial/log
+Examples/ROS2/RGB-D-Inertial/build
+Examples/ROS2/RGB-D-Inertial/src/rgbd_inertial_ros2
+Examples/ROS2/RGB-D-Inertial/src/lib
 
 Examples/Calibration/recorder_realsense_D435i
 
