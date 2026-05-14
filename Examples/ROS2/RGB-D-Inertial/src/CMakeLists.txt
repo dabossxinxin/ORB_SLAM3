@@ -22,8 +22,8 @@ endif()
 if (ENABLE_OMP)
     add_definitions(-DENABLE_OMP)
 endif()
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 
@@ -162,26 +162,22 @@ include_directories(
 # Build examples
 
 ## RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-ament_auto_add_executable(rgbd_inertial_ros2 rgbd_inertial_ros2.cc)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib )
+ament_auto_add_executable(rgbd_inertial_ros2 
+   ./include/RGBDInertialNode.h 
+   ./src/RGBDInertialNode.cc
+   ./src/RGBDInertialMain.cc
+)
 ament_target_dependencies(rgbd_inertial_ros2 rclcpp sensor_msgs cv_bridge message_filters)
 target_link_libraries(rgbd_inertial_ros2 ${PROJECT_NAME})
 
 install(FILES 
    ${PROJECT_SOURCE_DIR}/lib/libDBoW2.so 
    ${PROJECT_SOURCE_DIR}/lib/libg2o.so 
+   ${PROJECT_SOURCE_DIR}/lib/liborbslam3.so 
    DESTINATION lib)
-install(TARGETS
-   ${PROJECT_NAME}
-   LIBRARY DESTINATION lib
-)
 install(TARGETS 
    rgbd_inertial_ros2
    RUNTIME DESTINATION lib/${PROJECT_NAME})
-
-ament_auto_package()
-
-
-
-
+ament_auto_package(USE_SCOPED_HEADER_INSTALL_DIR)
 

@@ -589,7 +589,8 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
   }
 
   if (settings.sensor_ == System::STEREO ||
-      settings.sensor_ == System::IMU_STEREO) {
+      settings.sensor_ == System::IMU_STEREO &&
+          settings.cameraType_ != Settings::Rectified) {
     output << "\t-Camera 2 parameters (";
     if (settings.cameraType_ == Settings::PinHole ||
         settings.cameraType_ == Settings::Rectified) {
@@ -605,7 +606,7 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
     output << " ]" << endl;
 
     if (!settings.vPinHoleDistorsion2_.empty()) {
-      output << "\t-Camera 1 distortion parameters: [ ";
+      output << "\t-Camera 2 distortion parameters: [ ";
       for (float d : settings.vPinHoleDistorsion2_) {
         output << " " << d;
       }
