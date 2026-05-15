@@ -15,13 +15,14 @@ MESSAGE(STATUS "BUILD TYPE:" ${CMAKE_BUILD_TYPE})
 
 SET (G2O_LIB_TYPE SHARED)
 #add_definitions(-DDEBUG_G2O_PUSH)
+add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
 
 # There seems to be an issue with MSVC8
 # see http://eigen.tuxfamily.org/bz/show_bug.cgi?id=83
-if(MSVC90)
-  add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
-  message(STATUS "Disabling memory alignment for MSVC8")
-endif(MSVC90)
+#if(MSVC90)
+
+#  message(STATUS "Disabling memory alignment for MSVC8")
+#endif(MSVC90)
 
 # Set the output directory for the build executables and libraries
 IF(WIN32)
