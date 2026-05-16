@@ -61,9 +61,7 @@ class BaseVertex : public OptimizableGraph::Vertex {
   static const int Dimension =
       D;  ///< dimension of the estimate (minimal) in the manifold space
 
-  typedef Eigen::Map<Matrix<double, D, D>,
-                     Matrix<double, D, D>::Flags & AlignedBit ? Aligned
-                                                              : Unaligned>
+  typedef Eigen::Map<Matrix<double, D, D>, Eigen::Aligned>
       HessianBlockType;
 
  public:

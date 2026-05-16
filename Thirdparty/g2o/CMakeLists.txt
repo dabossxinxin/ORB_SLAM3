@@ -7,22 +7,13 @@ SET(g2o_C_FLAGS)
 SET(g2o_CXX_FLAGS)
 
 # default built type
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release)
+ENDIF()
 MESSAGE(STATUS "BUILD TYPE:" ${CMAKE_BUILD_TYPE})
 
 SET (G2O_LIB_TYPE SHARED)
-#add_definitions(-DDEBUG_G2O_PUSH)
-add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
-
-# There seems to be an issue with MSVC8
-# see http://eigen.tuxfamily.org/bz/show_bug.cgi?id=83
-#if(MSVC90)
-
-#  message(STATUS "Disabling memory alignment for MSVC8")
-#endif(MSVC90)
+#add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
 
 # Set the output directory for the build executables and libraries
 IF(WIN32)
@@ -71,9 +62,10 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${g2o_C_FLAGS}")
 
 # Find Eigen3
 SET(EIGEN3_INCLUDE_DIR ${G2O_EIGEN3_INCLUDE})
-FIND_PACKAGE(Eigen3 3.1.0 REQUIRED)
+FIND_PACKAGE(Eigen3 3.4.0 REQUIRED)
 IF(EIGEN3_FOUND)
   SET(G2O_EIGEN3_INCLUDE ${EIGEN3_INCLUDE_DIR} CACHE PATH "Directory of Eigen3")
+  MESSAGE(STATUS "EIGEN3 VERSION: ${EIGEN3_VERSION_STRING}")
 ELSE(EIGEN3_FOUND)
   SET(G2O_EIGEN3_INCLUDE "" CACHE PATH "Directory of Eigen3")
 ENDIF(EIGEN3_FOUND)

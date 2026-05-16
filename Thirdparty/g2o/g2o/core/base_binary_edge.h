@@ -51,13 +51,13 @@ namespace g2o {
 
       static const int Dimension = BaseEdge<D, E>::Dimension;
       typedef typename BaseEdge<D,E>::Measurement Measurement;
-      typedef typename Matrix<double, D, Di>::AlignedMapType JacobianXiOplusType;
-      typedef typename Matrix<double, D, Dj>::AlignedMapType JacobianXjOplusType;
+      typedef typename Matrix<double, D, Di>::MapType JacobianXiOplusType;
+      typedef typename Matrix<double, D, Dj>::MapType JacobianXjOplusType;
       typedef typename BaseEdge<D,E>::ErrorVector ErrorVector;
       typedef typename BaseEdge<D,E>::InformationType InformationType;
 
-      typedef Eigen::Map<Matrix<double, Di, Dj>, Matrix<double, Di, Dj>::Flags & AlignedBit ? Aligned : Unaligned > HessianBlockType;
-      typedef Eigen::Map<Matrix<double, Dj, Di>, Matrix<double, Dj, Di>::Flags & AlignedBit ? Aligned : Unaligned > HessianBlockTransposedType;
+      typedef Eigen::Map<Matrix<double, Di, Dj>, Eigen::Aligned> HessianBlockType;
+      typedef Eigen::Map<Matrix<double, Dj, Di>, Eigen::Aligned> HessianBlockTransposedType;
 
       BaseBinaryEdge() : BaseEdge<D,E>(),
       _hessianRowMajor(false),

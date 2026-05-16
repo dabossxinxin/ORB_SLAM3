@@ -1,7 +1,12 @@
-echo "Building ROS nodes"
+echo "Building ORB_SLAM3 Library"
 
-cd Examples/ROS/ORB_SLAM3
-mkdir build
+mkdir -p build
 cd build
-cmake .. -DROS_BUILD_TYPE=Release
-make -j
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF
+make -j8
+
+cd ..
+echo "Building ROS2 nodes"
+
+cd Examples/ROS2
+colcon build --symlink-install

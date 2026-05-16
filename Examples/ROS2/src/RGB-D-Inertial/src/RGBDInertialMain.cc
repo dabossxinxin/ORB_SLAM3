@@ -24,7 +24,7 @@
 
 #include "RGBDInertialNode.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
 
   if (argc < 3) {

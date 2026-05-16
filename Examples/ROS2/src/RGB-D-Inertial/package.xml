@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>orbslam3</name>
+  <name>rgbd_inertial</name>
   <version>1.0.0</version>
   <description>ROS2 wrapper for ORB_SLAM3 library</description>
-  <maintainer email="zang09@naver.com">Haebeom Jung</maintainer>
+  <maintainer email="xxx_cumt@163.com">Xinxin Xiong</maintainer>
   <license>MIT</license>
-  <author>Haebeom Jung</author>
+  <author>Xinxin Xiong</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -21,7 +21,7 @@
 
 #include "RGBDInertialNode.h"
 
-double stamp2Sec(const builtin_interfaces::msg::Time &stamp) {
+double stamp2Sec(const builtin_interfaces::msg::Time& stamp) {
   return rclcpp::Time(stamp).seconds();
 }
 
@@ -32,12 +32,12 @@ rclcpp::Time sec2Stamp(double timestamp) {
   return rclcpp::Time(sec, nanosec);
 }
 
-ImageGrabber::ImageGrabber(ORB_SLAM3::System *pSLAM, const bool bRect,
+ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
                            const bool bClahe)
-    : rclcpp::Node("image_grabber"),
-      mpSLAM(pSLAM),
-      do_rectify(bRect),
-      mbClahe(bClahe) {
+    : rclcpp::Node("image_grabber")
+    , mpSLAM(pSLAM)
+    , mbClahe(bClahe)
+    , mbRectify(bRect) {
   rclcpp::QoS qos_profile_img(100);
   rclcpp::QoS qos_profile_imu(1000);
   qos_profile_img.reliability(rclcpp::ReliabilityPolicy::Reliable);
@@ -56,7 +56,8 @@ ImageGrabber::ImageGrabber(ORB_SLAM3::System *pSLAM, const bool bRect,
 
 void ImageGrabber::GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mBufMutexRgb);
-  if (!imgRgbBuf.empty()) imgRgbBuf.pop();
+  if (!imgRgbBuf.empty())
+    imgRgbBuf.pop();
 
   double delay =
       this->get_clock()->now().seconds() - stamp2Sec(msg->header.stamp);
@@ -69,7 +70,8 @@ void ImageGrabber::GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg) {
 void ImageGrabber::GrabImageDepth(
     const sensor_msgs::msg::Image::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mBufMutexDepth);
-  if (!imgDepthBuf.empty()) imgDepthBuf.pop();
+  if (!imgDepthBuf.empty())
+    imgDepthBuf.pop();
 
   double delay =
       this->get_clock()->now().seconds() - stamp2Sec(msg->header.stamp);
@@ -85,12 +87,8 @@ void ImageGrabber::GrabImu(const sensor_msgs::msg::Imu::SharedPtr imu_msg) {
   double delay =
       this->get_clock()->now().seconds() - stamp2Sec(imu_msg->header.stamp);
   RCLCPP_INFO(this->get_logger(),
-              "IMU data received, timestamp: %.3f, acc: [%.3f, %.3f, %.3f], "
-              "gyr: [%.3f, %.3f, %.3f], delay: %.3f",
-              stamp2Sec(imu_msg->header.stamp), imu_msg->linear_acceleration.x,
-              imu_msg->linear_acceleration.y, imu_msg->linear_acceleration.z,
-              imu_msg->angular_velocity.x, imu_msg->angular_velocity.y,
-              imu_msg->angular_velocity.z, delay);
+              "IMU data received, timestamp: %.3f, delay: %.3f",
+              stamp2Sec(imu_msg->header.stamp), delay);
   imuBuf.push(imu_msg);
 }
 
@@ -98,7 +96,7 @@ cv::Mat ImageGrabber::GetImage(
     const sensor_msgs::msg::Image::SharedPtr img_msg) {
   try {
     return cv_bridge::toCvShare(img_msg)->image.clone();
-  } catch (cv_bridge::Exception &e) {
+  } catch (cv_bridge::Exception& e) {
     RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
     return cv::Mat();
   }
@@ -140,7 +138,8 @@ void ImageGrabber::SyncWithImu() {
       }
     }
 
-    if (std::abs(tImRgb - tImDepth) > maxTimeDiff) continue;
+    if (std::abs(tImRgb - tImDepth) > maxTimeDiff)
+      continue;
 
     {
       std::lock_guard<std::mutex> lock(mBufMutexRgb);

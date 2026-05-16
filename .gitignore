@@ -1,14 +1,5 @@
-# Ignore all
-*
-
-# Unignore all with extensions
-!*.*
-
-# Unignore all dirs
-!*/
-
-CMakeLists.txt.user
-CMakeLists_modified.txt
+build/
+lib/
 
 Examples/RGB-D/rgbd_tum
 Examples/RGB-D/rgbd_realsense_D435i
@@ -38,57 +29,20 @@ Examples/Stereo-Inertial/stereo_inertial_tum_vi
 Examples/Stereo-Inertial/stereo_inertial_realsense_t265
 Examples/Stereo-Inertial/stereo_inertial_realsense_D435i
 
-Examples/ROS2/RGB-D-Inertial/install
-Examples/ROS2/RGB-D-Inertial/log
-Examples/ROS2/RGB-D-Inertial/build
+Examples/ROS2/install
+Examples/ROS2/log
+Examples/ROS2/build
 
-Examples/ROS2/Stereo-Inertial/install
-Examples/ROS2/Stereo-Inertial/log
-Examples/ROS2/Stereo-Inertial/build
+Examples/ROS2/src/RGB-D-Inertial/lib
+Examples/ROS2/src/Stereo-Inertial/lib
 
 Examples/Calibration/recorder_realsense_D435i
+Examples/Calibration/recorder_realsense_T265
 
-Examples/Tests/viewer_dataset
-Examples/Tests/sophus_test
-
-Examples/ROS/ORB_SLAM3/CMakeLists.txt.user
-Examples/ROS/ORB_SLAM3/build/
-
-KeyFrameTrajectory.txt
-CameraTrajectory.txt
-kf_*.txt
-f_*.txt
 Thirdparty/DBoW2/build/
 Thirdparty/DBoW2/lib/
 Thirdparty/g2o/build/
-Thirdparty/g2o/config.h
 Thirdparty/g2o/lib/
-build/
+Thirdparty/Sophus/build
 
-lib/
-
-cmake_modules/
-cmake-build-debug/
-
-ExecMean.txt
-SessionInfo.txt
-Results_Euroc.txt
-LBA_Stats.txt
-LocalMapTimeStats.txt
-TrackLocalMapStats.txt
-TrackingTimeStats.txt
-time*
-Time*
-Table_Euroc
-Table_TUMVI_rooms/
-*.pyc
-*.osa
-.idea/
-my_settings.txt
-
-borrar/*
-
-*/ExecMean.txt
-
-# Large vocabulary file (use the .tar.gz version instead)
 Vocabulary/ORBvoc.txt

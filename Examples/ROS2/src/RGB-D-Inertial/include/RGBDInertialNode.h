@@ -41,12 +41,12 @@
 #include "ImuTypes.h"
 #include "System.h"
 
-double stamp2Sec(const builtin_interfaces::msg::Time &stamp);
+double stamp2Sec(const builtin_interfaces::msg::Time& stamp);
 rclcpp::Time sec2Stamp(double timestamp);
 
 class ImageGrabber : public rclcpp::Node {
- public:
-  ImageGrabber(ORB_SLAM3::System *pSLAM, const bool bRect, const bool bClahe);
+public:
+  ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect, const bool bClahe);
 
   void GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImageDepth(const sensor_msgs::msg::Image::SharedPtr msg);
@@ -54,7 +54,7 @@ class ImageGrabber : public rclcpp::Node {
   cv::Mat GetImage(const sensor_msgs::msg::Image::SharedPtr img_msg);
   void SyncWithImu();
 
- private:
+private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depth_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
@@ -71,10 +71,10 @@ class ImageGrabber : public rclcpp::Node {
   std::mutex mBufMutexOdom;
   std::mutex mTrackMutex;
 
-  ORB_SLAM3::System *mpSLAM;
+  ORB_SLAM3::System* mpSLAM;
 
   const bool mbClahe = false;
-  const bool do_rectify = false;
+  const bool mbRectify = false;
 
   cv::Mat M1l, M2l, M1r, M2r;
   cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
