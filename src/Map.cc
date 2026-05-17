@@ -28,38 +28,39 @@ namespace ORB_SLAM3 {
 long unsigned int Map::nNextId = 0;
 
 Map::Map()
-    : mnMaxKFid(0),
-      mnBigChangeIdx(0),
-      mbImuInitialized(false),
-      mnMapChange(0),
-      mpFirstRegionKF(static_cast<KeyFrame*>(NULL)),
-      mbFail(false),
-      mIsInUse(false),
-      mHasTumbnail(false),
-      mbBad(false),
-      mnMapChangeNotified(0),
-      mbIsInertial(false),
-      mbIMU_BA1(false),
-      mbIMU_BA2(false) {
+    : mnMaxKFid(0)
+    , mnBigChangeIdx(0)
+    , mbImuInitialized(false)
+    , mnMapChange(0)
+    , mpFirstRegionKF(static_cast<KeyFrame*>(NULL))
+    , mbFail(false)
+    , mIsInUse(false)
+    , mHasTumbnail(false)
+    , mbBad(false)
+    , mnMapChangeNotified(0)
+    , mbIsInertial(false)
+    , mbIMU_BA1(false)
+    , mbIMU_BA2(false) {
   mnId = nNextId++;
   mThumbnail = static_cast<GLubyte*>(NULL);
 }
 
 Map::Map(int initKFid)
-    : mnInitKFid(initKFid),
-      mnMaxKFid(initKFid),
-      /*mnLastLoopKFid(initKFid),*/ mnBigChangeIdx(0),
-      mIsInUse(false),
-      mHasTumbnail(false),
-      mbBad(false),
-      mbImuInitialized(false),
-      mpFirstRegionKF(static_cast<KeyFrame*>(NULL)),
-      mnMapChange(0),
-      mbFail(false),
-      mnMapChangeNotified(0),
-      mbIsInertial(false),
-      mbIMU_BA1(false),
-      mbIMU_BA2(false) {
+    : mnInitKFid(initKFid)
+    , mnMaxKFid(initKFid)
+    ,
+    /*mnLastLoopKFid(initKFid),*/ mnBigChangeIdx(0)
+    , mIsInUse(false)
+    , mHasTumbnail(false)
+    , mbBad(false)
+    , mbImuInitialized(false)
+    , mpFirstRegionKF(static_cast<KeyFrame*>(NULL))
+    , mnMapChange(0)
+    , mbFail(false)
+    , mnMapChangeNotified(0)
+    , mbIsInertial(false)
+    , mbIMU_BA1(false)
+    , mbIMU_BA2(false) {
   mnId = nNextId++;
   mThumbnail = static_cast<GLubyte*>(NULL);
 }
@@ -71,7 +72,8 @@ Map::~Map() {
   // TODO: erase all keyframes from memory
   mspKeyFrames.clear();
 
-  if (mThumbnail) delete mThumbnail;
+  if (mThumbnail)
+    delete mThumbnail;
   mThumbnail = static_cast<GLubyte*>(NULL);
 
   mvpReferenceMapPoints.clear();
@@ -176,7 +178,9 @@ vector<MapPoint*> Map::GetReferenceMapPoints() {
   return mvpReferenceMapPoints;
 }
 
-long unsigned int Map::GetId() { return mnId; }
+long unsigned int Map::GetId() {
+  return mnId;
+}
 long unsigned int Map::GetInitKFid() {
   unique_lock<mutex> lock(mMutexMap);
   return mnInitKFid;
@@ -192,23 +196,25 @@ long unsigned int Map::GetMaxKFid() {
   return mnMaxKFid;
 }
 
-KeyFrame* Map::GetOriginKF() { return mpKFinitial; }
+KeyFrame* Map::GetOriginKF() {
+  return mpKFinitial;
+}
 
-void Map::SetCurrentMap() { mIsInUse = true; }
+void Map::SetCurrentMap() {
+  mIsInUse = true;
+}
 
-void Map::SetStoredMap() { mIsInUse = false; }
+void Map::SetStoredMap() {
+  mIsInUse = false;
+}
 
 void Map::clear() {
-  //    for(set<MapPoint*>::iterator sit=mspMapPoints.begin(),
-  //    send=mspMapPoints.end(); sit!=send; sit++)
-  //        delete *sit;
-
-  for (set<KeyFrame*>::iterator sit = mspKeyFrames.begin(),
-                                send = mspKeyFrames.end();
-       sit != send; sit++) {
+  auto sit = mspKeyFrames.begin();
+  auto send = mspKeyFrames.end();
+  for (; sit != send; ++sit) {
     KeyFrame* pKF = *sit;
     pKF->UpdateMap(static_cast<Map*>(NULL));
-    //        delete *sit;
+    // delete *sit;
   }
 
   mspMapPoints.clear();
@@ -221,11 +227,17 @@ void Map::clear() {
   mbIMU_BA2 = false;
 }
 
-bool Map::IsInUse() { return mIsInUse; }
+bool Map::IsInUse() {
+  return mIsInUse;
+}
 
-void Map::SetBad() { mbBad = true; }
+void Map::SetBad() {
+  mbBad = true;
+}
 
-bool Map::IsBad() { return mbBad; }
+bool Map::IsBad() {
+  return mbBad;
+}
 
 void Map::ApplyScaledRotation(const Sophus::SE3f& T, const float s,
                               const bool bScaledVel) {
@@ -289,7 +301,9 @@ bool Map::GetIniertialBA2() {
   return mbIMU_BA2;
 }
 
-void Map::ChangeId(long unsigned int nId) { mnId = nId; }
+void Map::ChangeId(long unsigned int nId) {
+  mnId = nId;
+}
 
 unsigned int Map::GetLowerKFID() {
   unique_lock<mutex> lock(mMutexMap);
@@ -322,7 +336,8 @@ void Map::SetLastMapChange(int currentChangeId) {
 void Map::PreSave(std::set<GeometricCamera*>& spCams) {
   int nMPWithoutObs = 0;
   for (MapPoint* pMPi : mspMapPoints) {
-    if (!pMPi || pMPi->isBad()) continue;
+    if (!pMPi || pMPi->isBad())
+      continue;
 
     if (pMPi->GetObservations().size() == 0) {
       nMPWithoutObs++;
@@ -347,7 +362,8 @@ void Map::PreSave(std::set<GeometricCamera*>& spCams) {
   // Backup of MapPoints
   mvpBackupMapPoints.clear();
   for (MapPoint* pMPi : mspMapPoints) {
-    if (!pMPi || pMPi->isBad()) continue;
+    if (!pMPi || pMPi->isBad())
+      continue;
 
     mvpBackupMapPoints.push_back(pMPi);
     pMPi->PreSave(mspKeyFrames, mspMapPoints);
@@ -356,7 +372,8 @@ void Map::PreSave(std::set<GeometricCamera*>& spCams) {
   // Backup of KeyFrames
   mvpBackupKeyFrames.clear();
   for (KeyFrame* pKFi : mspKeyFrames) {
-    if (!pKFi || pKFi->isBad()) continue;
+    if (!pKFi || pKFi->isBad())
+      continue;
 
     mvpBackupKeyFrames.push_back(pKFi);
     pKFi->PreSave(mspKeyFrames, mspMapPoints, spCams);
@@ -385,7 +402,8 @@ void Map::PostLoad(
 
   map<long unsigned int, MapPoint*> mpMapPointId;
   for (MapPoint* pMPi : mspMapPoints) {
-    if (!pMPi || pMPi->isBad()) continue;
+    if (!pMPi || pMPi->isBad())
+      continue;
 
     pMPi->UpdateMap(this);
     mpMapPointId[pMPi->mnId] = pMPi;
@@ -393,7 +411,8 @@ void Map::PostLoad(
 
   map<long unsigned int, KeyFrame*> mpKeyFrameId;
   for (KeyFrame* pKFi : mspKeyFrames) {
-    if (!pKFi || pKFi->isBad()) continue;
+    if (!pKFi || pKFi->isBad())
+      continue;
 
     pKFi->UpdateMap(this);
     pKFi->SetORBVocabulary(pORBVoc);
@@ -403,13 +422,15 @@ void Map::PostLoad(
 
   // References reconstruction between different instances
   for (MapPoint* pMPi : mspMapPoints) {
-    if (!pMPi || pMPi->isBad()) continue;
+    if (!pMPi || pMPi->isBad())
+      continue;
 
     pMPi->PostLoad(mpKeyFrameId, mpMapPointId);
   }
 
   for (KeyFrame* pKFi : mspKeyFrames) {
-    if (!pKFi || pKFi->isBad()) continue;
+    if (!pKFi || pKFi->isBad())
+      continue;
 
     pKFi->PostLoad(mpKeyFrameId, mpMapPointId, mpCams);
     pKFDB->add(pKFi);

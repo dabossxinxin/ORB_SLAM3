@@ -170,6 +170,13 @@ void ImageGrabber::SyncWithImu() {
       }
     }
 
+    RCLCPP_INFO(this->get_logger(),
+                "Processing Left ts: %.3f, Right ts: %.3f, Imu ts: %.3f~%.3f, "
+                "size: %zu",
+                tImLeft, tImRight,
+                vImuMeas.size() > 0 ? vImuMeas.front().t : 0.0,
+                vImuMeas.size() > 0 ? vImuMeas.back().t : 0.0, vImuMeas.size());
+
 #ifdef COMPILEDWITHC11
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
