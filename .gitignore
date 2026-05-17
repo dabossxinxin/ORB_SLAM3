@@ -35,6 +35,8 @@ Examples/ROS2/build
 
 Examples/ROS2/src/RGB-D-Inertial/lib
 Examples/ROS2/src/Stereo-Inertial/lib
+Examples/ROS2/src/RGB-D-Inertial/*.log
+Examples/ROS2/src/Stereo-Inertial/*.log
 
 Examples/Calibration/recorder_realsense_D435i
 Examples/Calibration/recorder_realsense_T265
