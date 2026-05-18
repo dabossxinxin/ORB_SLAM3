@@ -26,15 +26,20 @@
 
 #include <algorithm>
 #include <chrono>
+#include <condition_variable>
 #include <fstream>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <iostream>
 #include <mutex>
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <opencv2/core/core.hpp>
 #include <queue>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <thread>
 #include <vector>
 
@@ -47,6 +52,7 @@ rclcpp::Time sec2Stamp(double timestamp);
 class ImageGrabber : public rclcpp::Node {
 public:
   ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect, const bool bClahe);
+  ~ImageGrabber();
 
   void GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImageDepth(const sensor_msgs::msg::Image::SharedPtr msg);
@@ -54,17 +60,37 @@ public:
   cv::Mat GetImage(const sensor_msgs::msg::Image::SharedPtr img_msg);
   void SyncWithImu();
 
+  void PublishWorkLoop();
+  void publishOdometryAndPath();
+  void publishDenseCloud();
+
 private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depth_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pos_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+
+  // --- Publishing thread synchronization ---
+  Sophus::SE3f mCurrentPose;
+  double mCurrentTimestamp = 0.0;
+  bool mNewPoseAvailable = false;
+  bool mPubThreadRunning = true;
+  std::mutex mPubInfoMutex;
+  std::condition_variable mPubInfoCv;
+  nav_msgs::msg::Path mTrajectory;
+  std::thread mPubThread;
+
+  // --- Subscribed data buffers ---
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgRgbBuf;
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgDepthBuf;
   std::queue<sensor_msgs::msg::Imu::SharedPtr> imuBuf;
   std::queue<nav_msgs::msg::Odometry::SharedPtr> odomBuf;
 
+  // --- Mutexes ---
   std::mutex mBufMutexRgb;
   std::mutex mBufMutexDepth;
   std::mutex mBufMutex;
@@ -75,6 +101,7 @@ private:
 
   const bool mbClahe = false;
   const bool mbRectify = false;
+  int mCloudPubCounter = 0;
 
   cv::Mat M1l, M2l, M1r, M2r;
   cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));

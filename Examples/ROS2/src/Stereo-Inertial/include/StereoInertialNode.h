@@ -23,18 +23,25 @@
 #define RGBD_INERTIAL_ROS2_H
 
 #include <cv_bridge/cv_bridge.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include <algorithm>
 #include <chrono>
+#include <condition_variable>
 #include <fstream>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <iostream>
 #include <mutex>
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <opencv2/core/core.hpp>
 #include <queue>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <thread>
 #include <vector>
 
@@ -44,34 +51,68 @@
 double stamp2Sec(const builtin_interfaces::msg::Time& stamp);
 rclcpp::Time sec2Stamp(double timestamp);
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 class ImageGrabber : public rclcpp::Node {
 public:
   ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect, const bool bClahe);
+  ~ImageGrabber();
 
   void GrabImageLeft(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImageRight(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImu(const sensor_msgs::msg::Imu::SharedPtr imu_msg);
+  void GrabDenseCloud(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg);
   cv::Mat GetImage(const sensor_msgs::msg::Image::SharedPtr img_msg);
   void SyncWithImu();
+
+  void PublishWorkLoop();
+  void publishOdometryAndPath();
+  void publishSparseCloud();
+  void publishDenseCloud();
 
 private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr left_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr right_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr
+      dense_cloud_sub_;
+
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pos_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr dense_cloud_pub_;
 
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgLeftBuf;
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgRightBuf;
   std::queue<sensor_msgs::msg::Imu::SharedPtr> imuBuf;
+  std::queue<PointCloudRGB::Ptr> denseCloudBuf;
+  std::queue<double> denseCloudTimeBuf;
+
+  // --- Publishing thread synchronization ---
+  Sophus::SE3f mCurrentPose;
+  double mCurrentTimestamp = 0.0;
+  bool mNewPoseAvailable = false;
+  bool mPubThreadRunning = true;
+  std::mutex mPubInfoMutex;
+  std::condition_variable mPubInfoCv;
+  nav_msgs::msg::Path mTrajectory;
+  std::thread mPubThread;
+  PointCloudRGB::Ptr mpCurrentDenseCloud;
+  const float mfDepthThreshold = 3.0f;
 
   std::mutex mBufMutexLeft;
   std::mutex mBufMutexRight;
   std::mutex mBufMutexImu;
+  std::mutex mBufMutexDenseCloud;
   std::mutex mTrackMutex;
 
   ORB_SLAM3::System* mpSLAM;
 
   const bool mbClahe = false;
   const bool mbRectify = false;
+
+  Eigen::Matrix3f mRotColor2Infra1 = Eigen::Matrix3f::Identity();
+  Eigen::Vector3f mTranColor2Infra1 = Eigen::Vector3f::Zero();
 
   cv::Mat M1l, M2l, M1r, M2r;
   cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));

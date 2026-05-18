@@ -52,6 +52,29 @@ ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
   imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
       "/camera/camera/imu", qos_profile_imu,
       std::bind(&ImageGrabber::GrabImu, this, std::placeholders::_1));
+
+  pos_pub_ =
+      this->create_publisher<nav_msgs::msg::Odometry>("/orb_slam3/odom", 10);
+  path_pub_ =
+      this->create_publisher<nav_msgs::msg::Path>("/orb_slam3/path", 10);
+  cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "/orb_slam3/cloud", 10);
+
+  // Start the publishing thread
+  mPubThread = std::thread(&ImageGrabber::PublishWorkLoop, this);
+}
+
+ImageGrabber::~ImageGrabber() {
+  // end publishing thread
+  {
+    std::lock_guard<std::mutex> lock(mPubInfoMutex);
+    mPubThreadRunning = false;
+    mNewPoseAvailable = true;
+  }
+  mPubInfoCv.notify_one();
+  if (mPubThread.joinable()) {
+    mPubThread.join();
+  }
 }
 
 void ImageGrabber::GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg) {
@@ -186,7 +209,17 @@ void ImageGrabber::SyncWithImu() {
       std::lock_guard<std::mutex> lock(mTrackMutex);
       std::stringstream ss_filename;
       ss_filename << std::fixed << std::setprecision(6) << tImRgb;
-      mpSLAM->TrackRGBD(imRgb, imDepth, tImRgb, vImuMeas, ss_filename.str());
+      Sophus::SE3f currentPose = mpSLAM->TrackRGBD(imRgb, imDepth, tImRgb,
+                                                   vImuMeas, ss_filename.str());
+
+      // Store the latest pose and notify the publishing thread
+      {
+        std::lock_guard<std::mutex> lockPubInfo(mPubInfoMutex);
+        mCurrentPose = currentPose;
+        mCurrentTimestamp = tImRgb;
+        mNewPoseAvailable = true;
+      }
+      mPubInfoCv.notify_one();
     }
 #ifdef COMPILEDWITHC11
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -211,4 +244,127 @@ void ImageGrabber::SyncWithImu() {
       std::this_thread::sleep_for(tSleep);
     }
   }
+}
+
+void ImageGrabber::PublishWorkLoop() {
+  while (rclcpp::ok() && mPubThreadRunning) {
+    std::unique_lock<std::mutex> lock(mPubInfoMutex);
+    mPubInfoCv.wait(lock,
+                    [this] { return mNewPoseAvailable || !mPubThreadRunning; });
+
+    if (!mPubThreadRunning) {
+      break;
+    }
+    mNewPoseAvailable = false;
+
+    publishOdometryAndPath();
+    publishDenseCloud();
+  }
+}
+
+void ImageGrabber::publishOdometryAndPath() {
+  // --- Odometry ---
+  nav_msgs::msg::Odometry odom_msg;
+  double publishTime = stamp2Sec(this->get_clock()->now());
+  odom_msg.header.stamp = sec2Stamp(publishTime);
+  odom_msg.header.frame_id = "map";
+  odom_msg.child_frame_id = "camera";
+
+  const Eigen::Matrix3f Rwc = mCurrentPose.rotationMatrix().transpose();
+  const Eigen::Vector3f twc = -Rwc * mCurrentPose.translation();
+  const Eigen::Quaternionf quat = Eigen::Quaternionf(Rwc);
+
+  odom_msg.pose.pose.position.x = twc.x();
+  odom_msg.pose.pose.position.y = twc.y();
+  odom_msg.pose.pose.position.z = twc.z();
+  odom_msg.pose.pose.orientation.x = quat.x();
+  odom_msg.pose.pose.orientation.y = quat.y();
+  odom_msg.pose.pose.orientation.z = quat.z();
+  odom_msg.pose.pose.orientation.w = quat.w();
+
+  pos_pub_->publish(odom_msg);
+  double delay = publishTime - mCurrentTimestamp;
+  RCLCPP_INFO(this->get_logger(),
+              "Published odometry at timestamp: %.3f, delay: %.3f", publishTime,
+              delay);
+
+  // --- Path ---
+  geometry_msgs::msg::PoseStamped pose_stamped;
+  pose_stamped.header = odom_msg.header;
+  pose_stamped.pose = odom_msg.pose.pose;
+  mTrajectory.poses.push_back(pose_stamped);
+
+  constexpr size_t kMaxPathPoses = 10000;
+  if (mTrajectory.poses.size() > kMaxPathPoses) {
+    mTrajectory.poses.erase(
+        mTrajectory.poses.begin(),
+        mTrajectory.poses.begin() +
+            static_cast<long>(mTrajectory.poses.size() - kMaxPathPoses));
+  }
+
+  mTrajectory.header.frame_id = "map";
+  mTrajectory.header.stamp = odom_msg.header.stamp;
+  path_pub_->publish(mTrajectory);
+}
+
+void ImageGrabber::publishDenseCloud() {
+  // Get all map points from the current map
+  const auto& vpMPs = mpSLAM->GetAtlas()->GetAllMapPoints();
+  if (vpMPs.empty()) {
+    return;
+  }
+
+  sensor_msgs::msg::PointCloud2 cloud_msg;
+  double publishTime = stamp2Sec(this->get_clock()->now());
+  cloud_msg.header.stamp = sec2Stamp(publishTime);
+  cloud_msg.header.frame_id = "map";
+  cloud_msg.height = 1;
+  cloud_msg.width = static_cast<uint32_t>(vpMPs.size());
+  cloud_msg.is_bigendian = false;
+  cloud_msg.is_dense = false;
+  cloud_msg.point_step = 16;  // 3 float (xyz) + 1 float (padding)
+  cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
+
+  // Define fields: x, y, z
+  sensor_msgs::msg::PointField field;
+  field.name = "x";
+  field.offset = 0;
+  field.datatype = sensor_msgs::msg::PointField::FLOAT32;
+  field.count = 1;
+  cloud_msg.fields.push_back(field);
+
+  field.name = "y";
+  field.offset = 4;
+  cloud_msg.fields.push_back(field);
+
+  field.name = "z";
+  field.offset = 8;
+  cloud_msg.fields.push_back(field);
+
+  // Pack point data
+  cloud_msg.data.resize(cloud_msg.row_step);
+  size_t idx = 0;
+  for (const auto& pMP : vpMPs) {
+    if (pMP->isBad()) {
+      continue;
+    }
+
+    Eigen::Vector3f pos = pMP->GetWorldPos();
+    float* data_ptr = reinterpret_cast<float*>(&cloud_msg.data[idx]);
+    data_ptr[0] = pos.x();
+    data_ptr[1] = pos.y();
+    data_ptr[2] = pos.z();
+    idx += cloud_msg.point_step;
+  }
+
+  // Update width to actual number of written points
+  cloud_msg.width = static_cast<uint32_t>(idx / cloud_msg.point_step);
+  cloud_msg.row_step = idx;
+  cloud_msg.data.resize(idx);
+
+  cloud_pub_->publish(cloud_msg);
+  double delay = publishTime - mCurrentTimestamp;
+  RCLCPP_INFO(this->get_logger(),
+              "Published cloud with %u points, timestamp: %.3f, delay: %.3f",
+              cloud_msg.width, publishTime, delay);
 }

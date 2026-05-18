@@ -4,6 +4,8 @@ lib/
 Examples/RGB-D/rgbd_tum
 Examples/RGB-D/rgbd_realsense_D435i
 Examples/RGB-D-Inertial/rgbd_inertial_realsense_D435i
+Examples/RGB-D-Inertial/*.txt
+Examples/RGB-D/*.txt
 
 Examples/Monocular/mono_realsense_D435i
 Examples/Monocular/mono_euroc
@@ -11,23 +13,27 @@ Examples/Monocular/mono_kitti
 Examples/Monocular/mono_tum
 Examples/Monocular/mono_tum_vi
 Examples/Monocular/mono_realsense_t265
+Examples/Monocular/*.txt
 
 Examples/Stereo/stereo_euroc
 Examples/Stereo/stereo_kitti
 Examples/Stereo/stereo_tum_vi
 Examples/Stereo/stereo_realsense_t265
 Examples/Stereo/stereo_realsense_D435i
+Examples/Stereo/*.txt
 
 Examples/Monocular-Inertial/mono_inertial_euroc
 Examples/Monocular-Inertial/mono_inertial_tum_vi
 Examples/Monocular-Inertial/mono_inertial_realsense_t265
 Examples/Monocular-Inertial/mono_inertial_realsense_D435i
 Examples/Monocular-Inertial/mono_inertial_realsense_D435i_2
+Examples/Monocular-Inertial/*.txt
 
 Examples/Stereo-Inertial/stereo_inertial_euroc
 Examples/Stereo-Inertial/stereo_inertial_tum_vi
 Examples/Stereo-Inertial/stereo_inertial_realsense_t265
 Examples/Stereo-Inertial/stereo_inertial_realsense_D435i
+Examples/Stereo-Inertial/*.txt
 
 Examples/ROS2/install
 Examples/ROS2/log
@@ -37,6 +43,8 @@ Examples/ROS2/src/RGB-D-Inertial/lib
 Examples/ROS2/src/Stereo-Inertial/lib
 Examples/ROS2/src/RGB-D-Inertial/*.log
 Examples/ROS2/src/Stereo-Inertial/*.log
+Examples/ROS2/src/RGB-D-Inertial/*.txt
+Examples/ROS2/src/Stereo-Inertial/*.txt
 
 Examples/Calibration/recorder_realsense_D435i
 Examples/Calibration/recorder_realsense_T265

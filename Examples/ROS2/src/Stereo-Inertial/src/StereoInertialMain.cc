@@ -24,7 +24,7 @@
 
 #include "StereoInertialNode.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
 
   if (argc < 3) {
@@ -49,7 +49,9 @@ int main(int argc, char **argv) {
   rclcpp::shutdown();
   SLAM.Shutdown();
 
-  sync_thread.join();
+  if (sync_thread.joinable()) {
+    sync_thread.join();
+  }
 
   return 0;
 }

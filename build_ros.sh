@@ -9,4 +9,4 @@ cd ..
 echo "Building ROS2 nodes"
 
 cd Examples/ROS2
-colcon build --symlink-install
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
