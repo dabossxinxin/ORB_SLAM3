@@ -98,7 +98,8 @@ private:
   nav_msgs::msg::Path mTrajectory;
   std::thread mPubThread;
   PointCloudRGB::Ptr mpCurrentDenseCloud;
-  const float mfDepthThreshold = 3.0f;
+  const float mfMaxDepthThres = 3.0f;
+  const float mfMinDepthThres = 0.3f;
 
   std::mutex mBufMutexLeft;
   std::mutex mBufMutexRight;

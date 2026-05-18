@@ -441,7 +441,8 @@ void ImageGrabber::publishDenseCloud() {
   denseCloudWorld->points.reserve(mpCurrentDenseCloud->points.size());
   for (auto& p : mpCurrentDenseCloud->points) {
     Eigen::Vector3f ptBody = Eigen::Vector3f(p.x, p.y, p.z);
-    if (ptBody.norm() > mfDepthThreshold) {
+    const float ptDist = ptBody.norm();
+    if (ptDist > mfMaxDepthThres || ptDist < mfMinDepthThres) {
       continue;
     }
     Eigen::Vector3f ptWorld = Rwi * ptBody + twi;
