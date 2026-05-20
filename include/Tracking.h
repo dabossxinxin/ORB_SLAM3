@@ -172,7 +172,7 @@ public:
     bool mFastInit = false;
 
 
-    vector<MapPoint*> GetLocalMapMPS();
+    std::vector<MapPoint*> GetLocalMapMPS();
 
     bool mbWriteStats;
 
@@ -181,15 +181,15 @@ public:
     void TrackStats2File();
     void PrintTimeStats();
 
-    vector<double> vdRectStereo_ms;
-    vector<double> vdResizeImage_ms;
-    vector<double> vdORBExtract_ms;
-    vector<double> vdStereoMatch_ms;
-    vector<double> vdIMUInteg_ms;
-    vector<double> vdPosePred_ms;
-    vector<double> vdLMTrack_ms;
-    vector<double> vdNewKF_ms;
-    vector<double> vdTrackTotal_ms;
+    std::vector<double> vdRectStereo_ms;
+    std::vector<double> vdResizeImage_ms;
+    std::vector<double> vdORBExtract_ms;
+    std::vector<double> vdStereoMatch_ms;
+    std::vector<double> vdIMUInteg_ms;
+    std::vector<double> vdPosePred_ms;
+    std::vector<double> vdLMTrack_ms;
+    std::vector<double> vdNewKF_ms;
+    std::vector<double> vdTrackTotal_ms;
 #endif
 
 protected:

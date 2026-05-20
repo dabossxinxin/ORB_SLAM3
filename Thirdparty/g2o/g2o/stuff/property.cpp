@@ -88,9 +88,9 @@ namespace g2o {
   bool PropertyMap::updateMapFromString(const std::string& values)
   {
     bool status = true;
-    vector<string> valuesMap = strSplit(values, ",");
+    std::vector<string> valuesMap = strSplit(values, ",");
     for (size_t i = 0; i < valuesMap.size(); ++i) {
-      vector<string> m = strSplit(valuesMap[i], "=");
+      std::vector<string> m = strSplit(valuesMap[i], "=");
       if (m.size() != 2) {
         cerr << __PRETTY_FUNCTION__ << ": unable to extract name=value pair from " << valuesMap[i] << endl;
         continue;

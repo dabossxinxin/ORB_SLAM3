@@ -69,6 +69,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(PCL 1.10 REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
@@ -96,7 +97,7 @@ ament_auto_add_executable(rgbd_inertial_node
    ./src/RGBDInertialNode.cc
    ./src/RGBDInertialMain.cc
 )
-ament_target_dependencies(rgbd_inertial_node rclcpp sensor_msgs cv_bridge message_filters)
+ament_target_dependencies(rgbd_inertial_node rclcpp sensor_msgs cv_bridge message_filters pcl_conversions)
 target_link_libraries(rgbd_inertial_node ${PROJECT_SOURCE_DIR}/../../../../lib/liborbslam3.so)
 
 install(FILES 

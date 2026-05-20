@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     float imageScale = SLAM.GetImageScale();
 
     cv::Mat imLeft, imRight;
-    vector<ORB_SLAM3::IMU::Point> vImuMeas;
+    std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
 
     rs2::stream_profile fisheye_stream_left = pipe_profile.get_stream(RS2_STREAM_FISHEYE, 1);
     rs2_intrinsics intrinsics_left = fisheye_stream_left.as<rs2::video_stream_profile>().get_intrinsics();

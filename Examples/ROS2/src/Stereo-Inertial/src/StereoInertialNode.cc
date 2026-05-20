@@ -36,7 +36,7 @@ rclcpp::Time sec2Stamp(double timestamp) {
 
 ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
                            const bool bClahe)
-    : rclcpp::Node("image_grabber")
+    : rclcpp::Node("ImageGrabber")
     , mpSLAM(pSLAM)
     , mbClahe(bClahe)
     , mbRectify(bRect) {
@@ -235,7 +235,7 @@ void ImageGrabber::SyncWithImu() {
         denseCloudTimeBuf.pop();
       }
       if (!denseCloudBuf.empty() &&
-          mpSLAM->GetAtlas()->GetCurrentMap()->GetIniertialBA2()) {
+          mpSLAM->GetAtlas()->GetCurrentMap()->GetInertialBA2()) {
         denseCloud = denseCloudBuf.front();
         tDenseCloud = denseCloudTimeBuf.front();
         denseCloudBuf.pop();

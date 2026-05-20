@@ -32,9 +32,9 @@
 using namespace std;
 
 void LoadImages(const string &strImagePath, const string &strPathTimes,
-                vector<string> &vstrImages, vector<double> &vTimeStamps);
+                std::vector<string> &vstrImages, std::vector<double> &vTimeStamps);
 
-void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::Point3f> &vAcc, vector<cv::Point3f> &vGyro);
+void LoadIMU(const string &strImuPath, std::vector<double> &vTimeStamps, std::vector<cv::Point3f> &vAcc, std::vector<cv::Point3f> &vGyro);
 
 double ttrack_tot = 0;
 int main(int argc, char *argv[])
@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
 
     // Load all sequences:
     int seq;
-    vector< vector<string> > vstrImageFilenames;
-    vector< vector<double> > vTimestampsCam;
-    vector< vector<cv::Point3f> > vAcc, vGyro;
-    vector< vector<double> > vTimestampsImu;
-    vector<int> nImages;
-    vector<int> nImu;
-    vector<int> first_imu(num_seq,0);
+    std::vector< std::vector<string> > vstrImageFilenames;
+    std::vector< std::vector<double> > vTimestampsCam;
+    std::vector< std::vector<cv::Point3f> > vAcc, vGyro;
+    std::vector< std::vector<double> > vTimestampsImu;
+    std::vector<int> nImages;
+    std::vector<int> nImu;
+    std::vector<int> first_imu(num_seq,0);
 
     vstrImageFilenames.resize(num_seq);
     vTimestampsCam.resize(num_seq);
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     }
 
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(tot_images);
 
     cout.precision(17);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
         // Main loop
         cv::Mat im;
-        vector<ORB_SLAM3::IMU::Point> vImuMeas;
+        std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
         proccIm = 0;
         for(int ni=0; ni<nImages[seq]; ni++, proccIm++)
         {
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 }
 
 void LoadImages(const string &strImagePath, const string &strPathTimes,
-                vector<string> &vstrImages, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImages, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     fTimes.open(strPathTimes.c_str());
@@ -273,7 +273,7 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
     }
 }
 
-void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::Point3f> &vAcc, vector<cv::Point3f> &vGyro)
+void LoadIMU(const string &strImuPath, std::vector<double> &vTimeStamps, std::vector<cv::Point3f> &vAcc, std::vector<cv::Point3f> &vGyro)
 {
     ifstream fImu;
     fImu.open(strImuPath.c_str());

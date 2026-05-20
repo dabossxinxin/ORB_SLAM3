@@ -21,6 +21,8 @@
 
 #include "RGBDInertialNode.h"
 
+#include <pcl_conversions/pcl_conversions.h>
+
 double stamp2Sec(const builtin_interfaces::msg::Time& stamp) {
   return rclcpp::Time(stamp).seconds();
 }
@@ -34,7 +36,7 @@ rclcpp::Time sec2Stamp(double timestamp) {
 
 ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
                            const bool bClahe)
-    : rclcpp::Node("image_grabber")
+    : rclcpp::Node("ImageGrabber")
     , mpSLAM(pSLAM)
     , mbClahe(bClahe)
     , mbRectify(bRect) {
@@ -52,6 +54,9 @@ ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
   imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
       "/camera/camera/imu", qos_profile_imu,
       std::bind(&ImageGrabber::GrabImu, this, std::placeholders::_1));
+  dense_cloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+      "/camera/camera/depth/color/points", qos_profile_img,
+      std::bind(&ImageGrabber::GrabDenseCloud, this, std::placeholders::_1));
 
   pos_pub_ =
       this->create_publisher<nav_msgs::msg::Odometry>("/orb_slam3/odom", 10);
@@ -59,9 +64,13 @@ ImageGrabber::ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect,
       this->create_publisher<nav_msgs::msg::Path>("/orb_slam3/path", 10);
   cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
       "/orb_slam3/cloud", 10);
+  dense_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "/orb_slam3/dense_cloud", 10);
 
   // Start the publishing thread
   mPubThread = std::thread(&ImageGrabber::PublishWorkLoop, this);
+
+  mpCurrentDenseCloud = std::make_shared<PointCloudRGB>();
 }
 
 ImageGrabber::~ImageGrabber() {
@@ -105,7 +114,7 @@ void ImageGrabber::GrabImageDepth(
 }
 
 void ImageGrabber::GrabImu(const sensor_msgs::msg::Imu::SharedPtr imu_msg) {
-  std::lock_guard<std::mutex> lock(mBufMutex);
+  std::lock_guard<std::mutex> lock(mBufMutexImu);
 
   double delay =
       this->get_clock()->now().seconds() - stamp2Sec(imu_msg->header.stamp);
@@ -113,6 +122,22 @@ void ImageGrabber::GrabImu(const sensor_msgs::msg::Imu::SharedPtr imu_msg) {
               "IMU data received, timestamp: %.3f, delay: %.3f",
               stamp2Sec(imu_msg->header.stamp), delay);
   imuBuf.push(imu_msg);
+}
+
+void ImageGrabber::GrabDenseCloud(
+    const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg) {
+  std::lock_guard<std::mutex> lock(mBufMutexDenseCloud);
+
+  PointCloudRGB::Ptr cloud(new PointCloudRGB);
+  pcl::fromROSMsg(*cloud_msg, *cloud);
+  double msg_timestamp = stamp2Sec(cloud_msg->header.stamp);
+  double delay = this->get_clock()->now().seconds() - msg_timestamp;
+  RCLCPP_INFO(this->get_logger(),
+              "Dense cloud received, timestamp: %.3f, size: %zu, delay: %.3f",
+              stamp2Sec(cloud_msg->header.stamp), cloud->points.size(), delay);
+
+  denseCloudBuf.push(cloud);
+  denseCloudTimeBuf.push(msg_timestamp);
 }
 
 cv::Mat ImageGrabber::GetImage(
@@ -129,11 +154,12 @@ void ImageGrabber::SyncWithImu() {
   const double maxTimeDiff = 0.03333;
   while (rclcpp::ok()) {
     cv::Mat imRgb, imDepth;
-    double tImRgb = 0, tImDepth = 0;
+    PointCloudRGB::Ptr denseCloud = std::make_shared<PointCloudRGB>();
+    double tImRgb = 0, tImDepth = 0, tDenseCloud = 0;
     {
       std::lock_guard<std::mutex> lockRgb(mBufMutexRgb);
       std::lock_guard<std::mutex> lockDepth(mBufMutexDepth);
-      std::lock_guard<std::mutex> lockImu(mBufMutex);
+      std::lock_guard<std::mutex> lockImu(mBufMutexImu);
       if (imgRgbBuf.empty() || imgDepthBuf.empty() || imuBuf.empty()) {
         continue;
       }
@@ -178,7 +204,7 @@ void ImageGrabber::SyncWithImu() {
 
     std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
     {
-      std::lock_guard<std::mutex> lock(mBufMutex);
+      std::lock_guard<std::mutex> lock(mBufMutexImu);
       while (!imuBuf.empty() &&
              stamp2Sec(imuBuf.front()->header.stamp) <= tImRgb) {
         double t = stamp2Sec(imuBuf.front()->header.stamp);
@@ -193,11 +219,29 @@ void ImageGrabber::SyncWithImu() {
       }
     }
 
+    {
+      std::lock_guard<std::mutex> lockDenseCloud(mBufMutexDenseCloud);
+      while (!denseCloudBuf.empty() &&
+             std::abs(denseCloudTimeBuf.front() - tImRgb) > maxTimeDiff) {
+        denseCloudBuf.pop();
+        denseCloudTimeBuf.pop();
+      }
+      if (!denseCloudBuf.empty() &&
+          mpSLAM->GetAtlas()->GetCurrentMap()->GetInertialBA2()) {
+        denseCloud = denseCloudBuf.front();
+        tDenseCloud = denseCloudTimeBuf.front();
+        denseCloudBuf.pop();
+        denseCloudTimeBuf.pop();
+      }
+    }
+
     RCLCPP_INFO(
         this->get_logger(),
-        "Processing Depth ts: %.3f, RGB ts: %.3f, Imu ts: %.3f~%.3f, size: %zu",
+        "Processing Depth ts: %.3f, RGB ts: %.3f, Imu ts: %.3f~%.3f, "
+        "size: %zu, dense cloud ts: %.3f, size: %zu",
         tImDepth, tImRgb, vImuMeas.size() > 0 ? vImuMeas.front().t : 0.0,
-        vImuMeas.size() > 0 ? vImuMeas.back().t : 0.0, vImuMeas.size());
+        vImuMeas.size() > 0 ? vImuMeas.back().t : 0.0, vImuMeas.size(),
+        tDenseCloud, denseCloud != nullptr ? denseCloud->points.size() : 0);
 
 #ifdef COMPILEDWITHC11
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
@@ -214,12 +258,16 @@ void ImageGrabber::SyncWithImu() {
 
       // Store the latest pose and notify the publishing thread
       {
-        std::lock_guard<std::mutex> lockPubInfo(mPubInfoMutex);
-        mCurrentPose = currentPose;
-        mCurrentTimestamp = tImRgb;
-        mNewPoseAvailable = true;
+        std::unique_lock<std::mutex> lockPubInfo(mPubInfoMutex,
+                                                 std::try_to_lock);
+        if (lockPubInfo) {
+          mCurrentPose = currentPose;
+          mCurrentTimestamp = tImRgb;
+          mNewPoseAvailable = true;
+          mpCurrentDenseCloud = denseCloud;
+          mPubInfoCv.notify_one();
+        }
       }
-      mPubInfoCv.notify_one();
     }
 #ifdef COMPILEDWITHC11
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -258,6 +306,7 @@ void ImageGrabber::PublishWorkLoop() {
     mNewPoseAvailable = false;
 
     publishOdometryAndPath();
+    publishSparseCloud();
     publishDenseCloud();
   }
 }
@@ -307,7 +356,7 @@ void ImageGrabber::publishOdometryAndPath() {
   path_pub_->publish(mTrajectory);
 }
 
-void ImageGrabber::publishDenseCloud() {
+void ImageGrabber::publishSparseCloud() {
   // Get all map points from the current map
   const auto& vpMPs = mpSLAM->GetAtlas()->GetAllMapPoints();
   if (vpMPs.empty()) {
@@ -367,4 +416,42 @@ void ImageGrabber::publishDenseCloud() {
   RCLCPP_INFO(this->get_logger(),
               "Published cloud with %u points, timestamp: %.3f, delay: %.3f",
               cloud_msg.width, publishTime, delay);
+}
+
+void ImageGrabber::publishDenseCloud() {
+  if (!mpCurrentDenseCloud || mpCurrentDenseCloud->empty()) {
+    return;
+  }
+
+  const Eigen::Matrix3f Rwc = mCurrentPose.rotationMatrix().transpose();
+  const Eigen::Vector3f twc = -Rwc * mCurrentPose.translation();
+
+  PointCloudRGB::Ptr denseCloudWorld = std::make_shared<PointCloudRGB>();
+  denseCloudWorld->points.reserve(mpCurrentDenseCloud->points.size());
+  for (auto& p : mpCurrentDenseCloud->points) {
+    Eigen::Vector3f ptBody = Eigen::Vector3f(p.x, p.y, p.z);
+    const float ptDist = ptBody.norm();
+    if (ptDist > mfMaxDepthThres || ptDist < mfMinDepthThres) {
+      continue;
+    }
+    Eigen::Vector3f ptWorld = Rwc * ptBody + twc;
+
+    pcl::PointXYZRGB pt = p;
+    pt.x = ptWorld.x();
+    pt.y = ptWorld.y();
+    pt.z = ptWorld.z();
+    denseCloudWorld->points.emplace_back(pt);
+  }
+
+  sensor_msgs::msg::PointCloud2 cloud_msg;
+  pcl::toROSMsg(*denseCloudWorld, cloud_msg);
+  double publishTime = stamp2Sec(this->get_clock()->now());
+  cloud_msg.header.stamp = sec2Stamp(publishTime);
+  cloud_msg.header.frame_id = "map";
+  dense_cloud_pub_->publish(cloud_msg);
+  double delay = publishTime - mCurrentTimestamp;
+  RCLCPP_INFO(
+      this->get_logger(),
+      "Published dense cloud with %u points, timestamp: %.3f, delay: %.3f",
+      cloud_msg.width, publishTime, delay);
 }

@@ -26,9 +26,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstdarg>
 #include <unistd.h>
 
+#include <cstdarg>
 #include <opencv2/core/core.hpp>
 #include <string>
 #include <thread>
@@ -45,33 +45,49 @@
 #include "Tracking.h"
 #include "Viewer.h"
 
-
 namespace ORB_SLAM3 {
 
 class Verbose {
 public:
   enum eLevel {
-    // Three primary levels
-    VERBOSITY_ERROR = 0,
-    VERBOSITY_WARN = 1,
-    VERBOSITY_INFO = 2,
-
-    // Backward compatibility aliases
-    VERBOSITY_QUIET = VERBOSITY_ERROR,
-    VERBOSITY_NORMAL = VERBOSITY_INFO,
-    VERBOSITY_VERBOSE = VERBOSITY_INFO,
-    VERBOSITY_VERY_VERBOSE = VERBOSITY_INFO,
-    VERBOSITY_DEBUG = VERBOSITY_INFO
+    ERROR = 0,
+    WARN = 1,
+    INFO = 2,
+    QUIET = 3,
   };
 
-  static eLevel th;
-  static std::string nodeName;
+  static void SetVerboseLevel(eLevel level) { mLevelThreshold = level; }
 
-public:
-  static void PrintMess(const std::string& str, eLevel lev) {
-    if (lev > th)
+  /// Log with an explicit caller name (preferred way — no static state issues)
+  static void Print(const std::string& caller, eLevel level,
+                    const std::string& info) {
+    if (level > mLevelThreshold) {
       return;
+    }
+    printFormatted(caller, info, level);
+  }
 
+  // Printf-style formatted output with explicit caller name
+  static void Print(const std::string& caller, eLevel level, const char* format,
+                    ...)
+#ifdef __GNUG__
+      __attribute__((format(printf, 3, 4)))
+#endif
+  {
+    if (level > mLevelThreshold) {
+      return;
+    }
+    va_list args;
+    va_start(args, format);
+    char buffer[4096];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    printFormatted(caller, std::string(buffer), level);
+  }
+
+private:
+  static void printFormatted(const std::string& caller, const std::string& msg,
+                             eLevel level) {
     auto now = std::chrono::system_clock::now();
     auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                       now.time_since_epoch())
@@ -80,14 +96,14 @@ public:
     auto nsec = now_ns % 1000000000;
 
     const char* level_str = "";
-    switch (lev) {
-      case VERBOSITY_ERROR:
+    switch (level) {
+      case ERROR:
         level_str = "ERROR";
         break;
-      case VERBOSITY_WARN:
+      case WARN:
         level_str = "WARN";
         break;
-      case VERBOSITY_INFO:
+      case INFO:
         level_str = "INFO";
         break;
       default:
@@ -96,45 +112,11 @@ public:
     }
 
     std::cout << "[" << level_str << "] [" << sec << "." << std::setw(9)
-              << std::setfill('0') << nsec << "] [" << nodeName << "]: " << str
+              << std::setfill('0') << nsec << "] [" << caller << "]: " << msg
               << std::endl;
   }
 
-  // Printf-style formatted output: [LEVEL] [timestamp] [node]: formatted_msg
-  static void PrintData(eLevel lev, const char* format, ...)
-#ifdef __GNUG__
-      __attribute__((format(printf, 2, 3)))
-#endif
-  {
-    if (lev > th) return;
-
-    auto now = std::chrono::system_clock::now();
-    auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                      now.time_since_epoch()).count();
-    auto sec = now_ns / 1000000000;
-    auto nsec = now_ns % 1000000000;
-
-    const char* level_str = "";
-    switch (lev) {
-      case VERBOSITY_ERROR: level_str = "ERROR"; break;
-      case VERBOSITY_WARN:  level_str = "WARN";  break;
-      case VERBOSITY_INFO:  level_str = "INFO";  break;
-      default:              level_str = "INFO";  break;
-    }
-
-    va_list args;
-    va_start(args, format);
-    char buffer[4096];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-
-    std::cout << "[" << level_str << "] [" << sec << "." << std::setw(9)
-              << std::setfill('0') << nsec << "] [" << nodeName
-              << "]: " << buffer << std::endl;
-  }
-
-  static void SetTh(eLevel _th) { th = _th; }
-  static void SetNodeName(const std::string& name) { nodeName = name; }
+  static eLevel mLevelThreshold;
 };
 
 class Viewer;
@@ -177,7 +159,7 @@ public:
   // grayscale. Returns the camera pose (empty if tracking fails).
   Sophus::SE3f TrackStereo(
       const cv::Mat& imLeft, const cv::Mat& imRight, const double& timestamp,
-      const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(),
+      const std::vector<IMU::Point>& vImuMeas = std::vector<IMU::Point>(),
       string filename = "");
 
   // Process the given rgbd frame. Depthmap must be registered to the RGB frame.
@@ -186,7 +168,7 @@ public:
   // if tracking fails).
   Sophus::SE3f TrackRGBD(
       const cv::Mat& im, const cv::Mat& depthmap, const double& timestamp,
-      const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(),
+      const std::vector<IMU::Point>& vImuMeas = std::vector<IMU::Point>(),
       string filename = "");
 
   // Proccess the given monocular frame and optionally imu data
@@ -194,7 +176,7 @@ public:
   // grayscale. Returns the camera pose (empty if tracking fails).
   Sophus::SE3f TrackMonocular(
       const cv::Mat& im, const double& timestamp,
-      const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(),
+      const std::vector<IMU::Point>& vImuMeas = std::vector<IMU::Point>(),
       string filename = "");
 
 

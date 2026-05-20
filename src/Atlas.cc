@@ -206,7 +206,7 @@ std::vector<MapPoint*> Atlas::GetReferenceMapPoints()
     return mpCurrentMap->GetReferenceMapPoints();
 }
 
-vector<Map*> Atlas::GetAllMaps()
+std::vector<Map*> Atlas::GetAllMaps()
 {
     unique_lock<mutex> lock(mMutexAtlas);
     struct compFunctor
@@ -216,7 +216,7 @@ vector<Map*> Atlas::GetAllMaps()
             return elem1->GetId() < elem2->GetId();
         }
     };
-    vector<Map*> vMaps(mspMaps.begin(),mspMaps.end());
+    std::vector<Map*> vMaps(mspMaps.begin(),mspMaps.end());
     sort(vMaps.begin(), vMaps.end(), compFunctor());
     return vMaps;
 }
@@ -399,7 +399,7 @@ map<long unsigned int, KeyFrame*> Atlas::GetAtlasKeyframes()
     map<long unsigned int, KeyFrame*> mpIdKFs;
     for(Map* pMap_i : mvpBackupMaps)
     {
-        vector<KeyFrame*> vpKFs_Mi = pMap_i->GetAllKeyFrames();
+        std::vector<KeyFrame*> vpKFs_Mi = pMap_i->GetAllKeyFrames();
 
         for(KeyFrame* pKF_j_Mi : vpKFs_Mi)
         {

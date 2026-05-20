@@ -125,8 +125,8 @@ void Map::EraseKeyFrame(KeyFrame* pKF) {
   mspKeyFrames.erase(pKF);
   if (mspKeyFrames.size() > 0) {
     if (pKF->mnId == mpKFlowerID->mnId) {
-      vector<KeyFrame*> vpKFs =
-          vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
+      std::vector<KeyFrame*> vpKFs =
+          std::vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
       sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
       mpKFlowerID = vpKFs[0];
     }
@@ -138,7 +138,7 @@ void Map::EraseKeyFrame(KeyFrame* pKF) {
   // Delete the MapPoint
 }
 
-void Map::SetReferenceMapPoints(const vector<MapPoint*>& vpMPs) {
+void Map::SetReferenceMapPoints(const std::vector<MapPoint*>& vpMPs) {
   unique_lock<mutex> lock(mMutexMap);
   mvpReferenceMapPoints = vpMPs;
 }
@@ -153,14 +153,14 @@ int Map::GetLastBigChangeIdx() {
   return mnBigChangeIdx;
 }
 
-vector<KeyFrame*> Map::GetAllKeyFrames() {
+std::vector<KeyFrame*> Map::GetAllKeyFrames() {
   unique_lock<mutex> lock(mMutexMap);
-  return vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
+  return std::vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
 }
 
-vector<MapPoint*> Map::GetAllMapPoints() {
+std::vector<MapPoint*> Map::GetAllMapPoints() {
   unique_lock<mutex> lock(mMutexMap);
-  return vector<MapPoint*>(mspMapPoints.begin(), mspMapPoints.end());
+  return std::vector<MapPoint*>(mspMapPoints.begin(), mspMapPoints.end());
 }
 
 long unsigned int Map::MapPointsInMap() {
@@ -173,7 +173,7 @@ long unsigned int Map::KeyFramesInMap() {
   return mspKeyFrames.size();
 }
 
-vector<MapPoint*> Map::GetReferenceMapPoints() {
+std::vector<MapPoint*> Map::GetReferenceMapPoints() {
   unique_lock<mutex> lock(mMutexMap);
   return mvpReferenceMapPoints;
 }
@@ -281,22 +281,22 @@ bool Map::IsInertial() {
   return mbIsInertial;
 }
 
-void Map::SetIniertialBA1() {
+void Map::SetInertialBA1() {
   unique_lock<mutex> lock(mMutexMap);
   mbIMU_BA1 = true;
 }
 
-void Map::SetIniertialBA2() {
+void Map::SetInertialBA2() {
   unique_lock<mutex> lock(mMutexMap);
   mbIMU_BA2 = true;
 }
 
-bool Map::GetIniertialBA1() {
+bool Map::GetInertialBA1() {
   unique_lock<mutex> lock(mMutexMap);
   return mbIMU_BA1;
 }
 
-bool Map::GetIniertialBA2() {
+bool Map::GetInertialBA2() {
   unique_lock<mutex> lock(mMutexMap);
   return mbIMU_BA2;
 }

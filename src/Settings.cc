@@ -196,7 +196,7 @@ void Settings::readCamera1(cv::FileStorage& fSettings) {
   // Read camera model
   string cameraModel = readParameter<string>(fSettings, "Camera.type", found);
 
-  vector<float> vCalibration;
+  std::vector<float> vCalibration;
   if (cameraModel == "PinHole") {
     cameraType_ = PinHole;
 
@@ -276,7 +276,7 @@ void Settings::readCamera1(cv::FileStorage& fSettings) {
           readParameter<int>(fSettings, "Camera1.overlappingBegin", found);
       int colEnd =
           readParameter<int>(fSettings, "Camera1.overlappingEnd", found);
-      vector<int> vOverlapping = {colBegin, colEnd};
+      std::vector<int> vOverlapping = {colBegin, colEnd};
 
       static_cast<KannalaBrandt8*>(calibration1_)->mvLappingArea = vOverlapping;
     }
@@ -288,7 +288,7 @@ void Settings::readCamera1(cv::FileStorage& fSettings) {
 
 void Settings::readCamera2(cv::FileStorage& fSettings) {
   bool found;
-  vector<float> vCalibration;
+  std::vector<float> vCalibration;
   if (cameraType_ == PinHole) {
     bNeedToRectify_ = true;
 
@@ -343,7 +343,7 @@ void Settings::readCamera2(cv::FileStorage& fSettings) {
     int colBegin =
         readParameter<int>(fSettings, "Camera2.overlappingBegin", found);
     int colEnd = readParameter<int>(fSettings, "Camera2.overlappingEnd", found);
-    vector<int> vOverlapping = {colBegin, colEnd};
+    std::vector<int> vOverlapping = {colBegin, colEnd};
 
     static_cast<KannalaBrandt8*>(calibration2_)->mvLappingArea = vOverlapping;
   }

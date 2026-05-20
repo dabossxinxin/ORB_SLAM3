@@ -31,9 +31,9 @@
 using namespace std;
 
 void LoadImagesTUMVI(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps);
 
-void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::Point3f> &vAcc, vector<cv::Point3f> &vGyro);
+void LoadIMU(const string &strImuPath, std::vector<double> &vTimeStamps, std::vector<cv::Point3f> &vAcc, std::vector<cv::Point3f> &vGyro);
 
 double ttrack_tot = 0;
 int main(int argc, char **argv)
@@ -54,14 +54,14 @@ int main(int argc, char **argv)
 
     // Load all sequences:
     int seq;
-    vector< vector<string> > vstrImageLeftFilenames;
-    vector< vector<string> > vstrImageRightFilenames;
-    vector< vector<double> > vTimestampsCam;
-    vector< vector<cv::Point3f> > vAcc, vGyro;
-    vector< vector<double> > vTimestampsImu;
-    vector<int> nImages;
-    vector<int> nImu;
-    vector<int> first_imu(num_seq,0);
+    std::vector< std::vector<string> > vstrImageLeftFilenames;
+    std::vector< std::vector<string> > vstrImageRightFilenames;
+    std::vector< std::vector<double> > vTimestampsCam;
+    std::vector< std::vector<cv::Point3f> > vAcc, vGyro;
+    std::vector< std::vector<double> > vTimestampsImu;
+    std::vector<int> nImages;
+    std::vector<int> nImu;
+    std::vector<int> first_imu(num_seq,0);
 
     vstrImageLeftFilenames.resize(num_seq);
     vstrImageRightFilenames.resize(num_seq);
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     }
 
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(tot_images);
 
     cout << endl << "-------" << endl;
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
         // Main loop
         cv::Mat imLeft, imRight;
-        vector<ORB_SLAM3::IMU::Point> vImuMeas;
+        std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
         proccIm = 0;
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
         for(int ni=0; ni<nImages[seq]; ni++, proccIm++)
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
 }
 
 void LoadImagesTUMVI(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     cout << strPathLeft << endl;
@@ -316,7 +316,7 @@ void LoadImagesTUMVI(const string &strPathLeft, const string &strPathRight, cons
     }
 }
 
-void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::Point3f> &vAcc, vector<cv::Point3f> &vGyro)
+void LoadIMU(const string &strImuPath, std::vector<double> &vTimeStamps, std::vector<cv::Point3f> &vAcc, std::vector<cv::Point3f> &vGyro)
 {
     ifstream fImu;
     fImu.open(strImuPath.c_str());

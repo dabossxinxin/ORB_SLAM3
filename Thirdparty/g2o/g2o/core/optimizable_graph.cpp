@@ -505,7 +505,7 @@ bool OptimizableGraph::load(istream& is, bool createEdges)
         }
       }
       else {
-        vector<int> ids;
+        std::vector<int> ids;
         ids.resize(numV);
         for (int l = 0; l < numV; ++l)
           currentLine >> ids[l];
@@ -594,7 +594,7 @@ bool OptimizableGraph::save(ostream& os, int level) const
   for (HyperGraph::EdgeSet::const_iterator it = edges().begin(); it != edges().end(); ++it) {
     OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*it);
     if (e->level() == level) {
-      for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+      for (std::vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
         verticesToSave.insert(static_cast<OptimizableGraph::Vertex*>(*it));
       }
     }
@@ -637,7 +637,7 @@ bool OptimizableGraph::saveSubset(ostream& os, HyperGraph::VertexSet& vset, int 
       continue;
 
     bool verticesInEdge = true;
-    for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+    for (std::vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
       if (vset.find(*it) == vset.end()) {
         verticesInEdge = false;
         break;
@@ -659,7 +659,7 @@ bool OptimizableGraph::saveSubset(ostream& os, HyperGraph::EdgeSet& eset)
   std::set<OptimizableGraph::Vertex*> vset;
   for (HyperGraph::EdgeSet::const_iterator it = eset.begin(); it != eset.end(); ++it) {
     HyperGraph::Edge* e = *it;
-    for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+    for (std::vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
       OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(*it);
       vset.insert(v);
     }
@@ -693,7 +693,7 @@ void OptimizableGraph::addGraph(OptimizableGraph* g){
     OptimizableGraph::Edge* en = e->clone();
     en->resize(e->vertices().size());
     int cnt = 0;
-    for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+    for (std::vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
       OptimizableGraph::Vertex* v = (OptimizableGraph::Vertex*) vertex((*it)->id());
       assert(v);
       en->setVertex(cnt++, v);
@@ -714,9 +714,9 @@ int OptimizableGraph::maxDimension() const{
 void OptimizableGraph::setRenamedTypesFromString(const std::string& types)
 {
   Factory* factory = Factory::instance();
-  vector<string> typesMap = strSplit(types, ",");
+  std::vector<string> typesMap = strSplit(types, ",");
   for (size_t i = 0; i < typesMap.size(); ++i) {
-    vector<string> m = strSplit(typesMap[i], "=");
+    std::vector<string> m = strSplit(typesMap[i], "=");
     if (m.size() != 2) {
       cerr << __PRETTY_FUNCTION__ << ": unable to extract type map from " << typesMap[i] << endl;
       continue;
@@ -848,7 +848,7 @@ bool OptimizableGraph::saveEdge(std::ostream& os, OptimizableGraph::Edge* e) con
     os << tag << " ";
     if (_edge_has_id)
       os << e->id() << " ";
-    for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+    for (std::vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
       OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(*it);
       os << v->id() << " ";
     }

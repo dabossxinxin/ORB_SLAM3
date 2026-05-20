@@ -39,8 +39,7 @@
 
 namespace ORB_SLAM3 {
 
-Verbose::eLevel Verbose::th = Verbose::VERBOSITY_INFO;
-std::string Verbose::nodeName = "ORB_SLAM3";
+Verbose::eLevel Verbose::mLevelThreshold = Verbose::INFO;
 
 System::System(const string& strVocFile, const string& strSettingsFile,
                const eSensor sensor, const bool bUseViewer, const int initFr,
@@ -53,20 +52,6 @@ System::System(const string& strVocFile, const string& strSettingsFile,
     , mbDeactivateLocalizationMode(false)
     , mbShutDown(false) {
   // Output welcome message
-  cout << endl
-       << "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, "
-          "Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of "
-          "Zaragoza."
-       << endl
-       << "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel "
-          "and Juan D. Tardós, University of Zaragoza."
-       << endl
-       << "This program comes with ABSOLUTELY NO WARRANTY;" << endl
-       << "This is free software, and you are welcome to redistribute it"
-       << endl
-       << "under certain conditions. See LICENSE.txt." << endl
-       << endl;
-
   cout << "Input sensor was set to: ";
 
   if (mSensor == MONOCULAR)
@@ -250,12 +235,12 @@ System::System(const string& strVocFile, const string& strSettingsFile,
   }
 
   // Fix verbosity
-  Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
+  Verbose::SetVerboseLevel(Verbose::INFO);
 }
 
 Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft, const cv::Mat& imRight,
                                  const double& timestamp,
-                                 const vector<IMU::Point>& vImuMeas,
+                                 const std::vector<IMU::Point>& vImuMeas,
                                  string filename) {
   if (mSensor != STEREO && mSensor != IMU_STEREO) {
     cerr << "ERROR: you called TrackStereo but input sensor was not set to "
@@ -337,7 +322,7 @@ Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft, const cv::Mat& imRight,
 
 Sophus::SE3f System::TrackRGBD(const cv::Mat& im, const cv::Mat& depthmap,
                                const double& timestamp,
-                               const vector<IMU::Point>& vImuMeas,
+                               const std::vector<IMU::Point>& vImuMeas,
                                string filename) {
   if (mSensor != RGBD && mSensor != IMU_RGBD) {
     cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD."
@@ -405,7 +390,7 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat& im, const cv::Mat& depthmap,
 }
 
 Sophus::SE3f System::TrackMonocular(const cv::Mat& im, const double& timestamp,
-                                    const vector<IMU::Point>& vImuMeas,
+                                    const std::vector<IMU::Point>& vImuMeas,
                                     string filename) {
   {
     unique_lock<mutex> lock(mMutexReset);
@@ -541,8 +526,8 @@ void System::Shutdown() {
 }*/
 
   if (!mStrSaveAtlasToFile.empty()) {
-    Verbose::PrintMess("Atlas saving to file " + mStrSaveAtlasToFile,
-                       Verbose::VERBOSITY_NORMAL);
+    Verbose::Print("System", Verbose::INFO,
+                   "Atlas saving to file " + mStrSaveAtlasToFile);
     SaveAtlas(FileType::BINARY_FILE);
   }
 
@@ -566,7 +551,7 @@ void System::SaveTrajectoryTUM(const string& filename) {
     return;
   }
 
-  vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -625,7 +610,7 @@ void System::SaveKeyFrameTrajectoryTUM(const string& filename) {
   cout << endl
        << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
-  vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -661,7 +646,7 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
   endl; return;
   }*/
 
-  vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+  std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
   int numMaxKFs = 0;
   Map* pBiggerMap;
   std::cout << "There are " << std::to_string(vpMaps.size())
@@ -676,7 +661,7 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
     }
   }
 
-  vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -784,7 +769,7 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
 
   int numMaxKFs = 0;
 
-  vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -890,7 +875,7 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
 endl; return;
     }
 
-    vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+    std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
     Map* pBiggerMap;
     int numMaxKFs = 0;
     for(Map* pMap :vpMaps)
@@ -902,7 +887,7 @@ endl; return;
         }
     }
 
-    vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
+    std::vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
@@ -1017,7 +1002,7 @@ endl;
     cout << endl << "Saving keyframe trajectory to " << filename << " ..." <<
 endl;
 
-    vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+    std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
     Map* pBiggerMap;
     int numMaxKFs = 0;
     for(Map* pMap :vpMaps)
@@ -1029,7 +1014,7 @@ endl;
         }
     }
 
-    vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
+    std::vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
@@ -1050,7 +1035,7 @@ endl;
 mSensor==IMU_RGBD)
         {
             cv::Mat R = pKF->GetImuRotation().t();
-            vector<float> q = Converter::toQuaternion(R);
+            std::vector<float> q = Converter::toQuaternion(R);
             cv::Mat twb = pKF->GetImuPosition();
             f << setprecision(6) << 1e9*pKF->mTimeStamp  << " " <<
 setprecision(9) << twb.at<float>(0) << " " << twb.at<float>(1) << " " <<
@@ -1061,7 +1046,7 @@ endl;
         else
         {
             cv::Mat R = pKF->GetRotation();
-            vector<float> q = Converter::toQuaternion(R);
+            std::vector<float> q = Converter::toQuaternion(R);
             cv::Mat t = pKF->GetCameraCenter();
             f << setprecision(6) << 1e9*pKF->mTimeStamp << " " <<
 setprecision(9) << t.at<float>(0) << " " << t.at<float>(1) << " " <<
@@ -1076,7 +1061,7 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
   cout << endl
        << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
-  vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+  std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
   Map* pBiggerMap;
   int numMaxKFs = 0;
   for (Map* pMap : vpMaps) {
@@ -1091,7 +1076,7 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
     return;
   }
 
-  vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -1133,7 +1118,7 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename, Map* pMap) {
        << "Saving keyframe trajectory of map " << pMap->GetId() << " to "
        << filename << " ..." << endl;
 
-  vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -1177,7 +1162,7 @@ endl; if(mSensor==MONOCULAR)
 endl; return;
     }
 
-    vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+    std::vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
@@ -1236,7 +1221,7 @@ void System::SaveTrajectoryKITTI(const string& filename) {
     return;
   }
 
-  vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+  std::vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
   // Transform all keyframes so that the first keyframe is at the origin.
@@ -1358,12 +1343,12 @@ int System::GetTrackingState() {
   return mTrackingState;
 }
 
-vector<MapPoint*> System::GetTrackedMapPoints() {
+std::vector<MapPoint*> System::GetTrackedMapPoints() {
   unique_lock<mutex> lock(mMutexState);
   return mTrackedMapPoints;
 }
 
-vector<cv::KeyPoint> System::GetTrackedKeyPointsUn() {
+std::vector<cv::KeyPoint> System::GetTrackedKeyPointsUn() {
   unique_lock<mutex> lock(mMutexState);
   return mTrackedKeyPointsUn;
 }

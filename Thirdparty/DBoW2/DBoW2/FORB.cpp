@@ -39,7 +39,7 @@ void FORB::meanValue(const std::vector<FORB::pDescriptor> &descriptors,
   }
   else
   {
-    vector<int> sum(FORB::L * 8, 0);
+    std::vector<int> sum(FORB::L * 8, 0);
     
     for(size_t i = 0; i < descriptors.size(); ++i)
     {

@@ -30,7 +30,7 @@
 using namespace std;
 
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps);
 
 double ttrack_tot = 0;
 int main(int argc, char **argv)
@@ -50,10 +50,10 @@ int main(int argc, char **argv)
 
     // Load all sequences:
     int seq;
-    vector< vector<string> > vstrImageLeftFilenames;
-    vector< vector<string> > vstrImageRightFilenames;
-    vector< vector<double> > vTimestampsCam;
-    vector<int> nImages;
+    std::vector< std::vector<string> > vstrImageLeftFilenames;
+    std::vector< std::vector<string> > vstrImageRightFilenames;
+    std::vector< std::vector<double> > vTimestampsCam;
+    std::vector<int> nImages;
 
     vstrImageLeftFilenames.resize(num_seq);
     vstrImageRightFilenames.resize(num_seq);
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
 
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(tot_images);
 
     cout << endl << "-------" << endl;
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 }
 
 /*void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     cout << strPathLeft << endl;
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 }*/
 
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     cout << strPathLeft << endl;

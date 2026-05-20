@@ -103,7 +103,7 @@ void MarginalCovarianceCholesky::computeCovariance(double** covBlocks, const std
 {
   _map.clear();
   int base = 0;
-  vector<MatrixElem> elemsToCompute;
+  std::vector<MatrixElem> elemsToCompute;
   for (size_t i = 0; i < blockIndices.size(); ++i) {
     int nbase = blockIndices[i];
     int vdim = nbase - base;
@@ -159,7 +159,7 @@ void MarginalCovarianceCholesky::computeCovariance(SparseBlockMatrix<MatrixXd>& 
               rowBlockIndices.size(),
               rowBlockIndices.size(), true);
   _map.clear();
-  vector<MatrixElem> elemsToCompute;
+  std::vector<MatrixElem> elemsToCompute;
   for (size_t i = 0; i < blockIndices.size(); ++i) {
     int blockRow=blockIndices[i].first;    
     int blockCol=blockIndices[i].second;

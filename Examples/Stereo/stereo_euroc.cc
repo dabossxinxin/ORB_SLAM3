@@ -29,7 +29,7 @@
 using namespace std;
 
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps);
 
 int main(int argc, char **argv)
 {  
@@ -52,10 +52,10 @@ int main(int argc, char **argv)
 
     // Load all sequences:
     int seq;
-    vector< vector<string> > vstrImageLeft;
-    vector< vector<string> > vstrImageRight;
-    vector< vector<double> > vTimestampsCam;
-    vector<int> nImages;
+    std::vector< std::vector<string> > vstrImageLeft;
+    std::vector< std::vector<string> > vstrImageRight;
+    std::vector< std::vector<double> > vTimestampsCam;
+    std::vector<int> nImages;
 
     vstrImageLeft.resize(num_seq);
     vstrImageRight.resize(num_seq);
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     }
 
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(tot_images);
 
     cout << endl << "-------" << endl;
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     #endif
 
             // Pass the images to the SLAM system
-            SLAM.TrackStereo(imLeft,imRight,tframe, vector<ORB_SLAM3::IMU::Point>(), vstrImageLeft[seq][ni]);
+            SLAM.TrackStereo(imLeft,imRight,tframe, std::vector<ORB_SLAM3::IMU::Point>(), vstrImageLeft[seq][ni]);
 
     #ifdef COMPILEDWITHC11
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 }
 
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
-                vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImageLeft, std::vector<string> &vstrImageRight, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     fTimes.open(strPathTimes.c_str());

@@ -95,7 +95,7 @@ bool MatrixStructure::write(const char* filename) const
   if (lastDot != std::string::npos) 
     name = name.substr(0, lastDot);
 
-  vector<pair<int, int> > entries;
+  std::vector<pair<int, int> > entries;
   for (int i=0; i < cols; ++i) {
     const int& rbeg = Ap[i];
     const int& rend = Ap[i+1];
@@ -114,7 +114,7 @@ bool MatrixStructure::write(const char* filename) const
   fout << "# nnz: " << entries.size() << std::endl;
   fout << "# rows: " << rows << std::endl;
   fout << "# columns: " << cols << std::endl;
-  for (vector<pair<int, int> >::const_iterator it = entries.begin(); it != entries.end(); ++it) {
+  for (std::vector<pair<int, int> >::const_iterator it = entries.begin(); it != entries.end(); ++it) {
     const pair<int, int>& entry = *it;
     fout << entry.first << " " << entry.second << " 0" << std::endl; // write a constant value of 0
   }

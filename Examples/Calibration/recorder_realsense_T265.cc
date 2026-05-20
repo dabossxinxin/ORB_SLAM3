@@ -127,10 +127,10 @@ int main(int argc, char **argv) {
     std::mutex imu_mutex;
     std::condition_variable cond_image_rec;
 
-    vector<double> v_gyro_timestamp;
-    vector<rs2_vector> v_gyro_data;
-    vector<double> v_acc_timestamp;
-    vector<rs2_vector> v_acc_data;
+    std::vector<double> v_gyro_timestamp;
+    std::vector<rs2_vector> v_gyro_data;
+    std::vector<double> v_acc_timestamp;
+    std::vector<rs2_vector> v_acc_data;
 
     cv::Mat imCV_left, imCV_right;
     int width_img, height_img;

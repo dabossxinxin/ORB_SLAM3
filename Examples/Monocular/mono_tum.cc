@@ -27,8 +27,8 @@
 
 using namespace std;
 
-void LoadImages(const string &strFile, vector<string> &vstrImageFilenames,
-                vector<double> &vTimestamps);
+void LoadImages(const string &strFile, std::vector<string> &vstrImageFilenames,
+                std::vector<double> &vTimestamps);
 
 int main(int argc, char **argv)
 {
@@ -39,8 +39,8 @@ int main(int argc, char **argv)
     }
 
     // Retrieve paths to images
-    vector<string> vstrImageFilenames;
-    vector<double> vTimestamps;
+    std::vector<string> vstrImageFilenames;
+    std::vector<double> vTimestamps;
     string strFile = string(argv[3])+"/rgb.txt";
     LoadImages(strFile, vstrImageFilenames, vTimestamps);
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     float imageScale = SLAM.GetImageScale();
 
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(nImages);
 
     cout << endl << "-------" << endl;
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void LoadImages(const string &strFile, vector<string> &vstrImageFilenames, vector<double> &vTimestamps)
+void LoadImages(const string &strFile, std::vector<string> &vstrImageFilenames, std::vector<double> &vTimestamps)
 {
     ifstream f;
     f.open(strFile.c_str());

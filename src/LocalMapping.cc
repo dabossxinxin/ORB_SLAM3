@@ -163,18 +163,18 @@ void LocalMapping::Run() {
                         mpCurrentKeyFrame->mPrevKF->mTimeStamp;
             }
 
-            Verbose::PrintData(
-                Verbose::VERBOSITY_INFO,
+            Verbose::Print(
+                "LocalMapping", Verbose::INFO,
                 "CurrentKF ts: %.3f, PrevKF ts: %.3f, Dist: %.3f, Tinit: %.3f",
                 mpCurrentKeyFrame->mTimeStamp,
                 mpCurrentKeyFrame->mPrevKF->mTimeStamp, dist, mTinit);
 
-            if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()) {
+            if (!mpCurrentKeyFrame->GetMap()->GetInertialBA2()) {
               if ((mTinit < 10.f) && (dist < 0.02)) {
-                Verbose::PrintData(Verbose::VERBOSITY_WARN,
-                                   "Not enough motion for initializing. "
-                                   "Reseting... Dist: %.3f, Tinit: %.3f",
-                                   dist, mTinit);
+                Verbose::Print("LocalMapping", Verbose::WARN,
+                               "Not enough motion for initializing. "
+                               "Reseting... Dist: %.3f, Tinit: %.3f",
+                               dist, mTinit);
 
                 unique_lock<mutex> lock(mMutexReset);
                 mbResetRequestedActiveMap = true;
@@ -189,7 +189,7 @@ void LocalMapping::Run() {
             Optimizer::LocalInertialBA(
                 mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),
                 num_FixedKF_BA, num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
-                !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+                !mpCurrentKeyFrame->GetMap()->GetInertialBA2());
             b_doneLBA = true;
           } else {
             Optimizer::LocalBundleAdjustment(
@@ -247,37 +247,38 @@ void LocalMapping::Run() {
 
         if ((mTinit < 50.0f) && mbInertial) {
           // Enter here everytime local-mapping is called
-          Verbose::PrintData(
-              Verbose::VERBOSITY_INFO,
-              "Enter LocalMapping line242, isImuInitialized: %d, tracker "
-              "state: %d, VIBA1: %d",
-              mpCurrentKeyFrame->GetMap()->isImuInitialized(),
-              mpTracker->mState,
-              mpCurrentKeyFrame->GetMap()->GetIniertialBA1());
+          Verbose::Print("LocalMapping", Verbose::INFO,
+                         "Visual Inertial Intializing, Imu Intialize state: "
+                         "%d, track state: %d, VIBA1 state: %d",
+                         mpCurrentKeyFrame->GetMap()->isImuInitialized(),
+                         mpTracker->mState,
+                         mpCurrentKeyFrame->GetMap()->GetInertialBA1());
 
           if (mpCurrentKeyFrame->GetMap()->isImuInitialized() &&
               mpTracker->mState == Tracking::OK) {
-            if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA1()) {
+            if (!mpCurrentKeyFrame->GetMap()->GetInertialBA1()) {
               if (mTinit > 5.0f) {
-                Verbose::PrintMess("Start VIBA Step1", Verbose::VERBOSITY_INFO);
-                mpCurrentKeyFrame->GetMap()->SetIniertialBA1();
+                mpCurrentKeyFrame->GetMap()->SetInertialBA1();
                 if (mbMonocular) {
                   InitializeIMU(1.f, 1e5, true);
                 } else {
                   InitializeIMU(1.f, 1e5, true);
                 }
-                Verbose::PrintMess("End VIBA Step1", Verbose::VERBOSITY_INFO);
+                Verbose::Print("LocalMapping", Verbose::INFO,
+                               "Finished VIBA Step1, State: %d",
+                               mpCurrentKeyFrame->GetMap()->GetInertialBA1());
               }
-            } else if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()) {
+            } else if (!mpCurrentKeyFrame->GetMap()->GetInertialBA2()) {
               if (mTinit > 15.0f) {
-                Verbose::PrintMess("Start VIBA Step2", Verbose::VERBOSITY_INFO);
-                mpCurrentKeyFrame->GetMap()->SetIniertialBA2();
+                mpCurrentKeyFrame->GetMap()->SetInertialBA2();
                 if (mbMonocular) {
                   InitializeIMU(0.f, 0.f, true);
                 } else {
                   InitializeIMU(0.f, 0.f, true);
                 }
-                Verbose::PrintMess("End VIBA Step2", Verbose::VERBOSITY_INFO);
+                Verbose::Print("LocalMapping", Verbose::INFO,
+                               "Finished VIBA Step2, State: %d",
+                               mpCurrentKeyFrame->GetMap()->GetInertialBA2());
               }
             }
 
@@ -356,12 +357,10 @@ void LocalMapping::ProcessNewKeyFrame() {
 
   // Compute Bags of Words structures
   mpCurrentKeyFrame->ComputeBoW();
+  const auto vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
 
   // Associate MapPoints to the new keyframe and update normal and descriptor
-  const vector<MapPoint*> vpMapPointMatches =
-      mpCurrentKeyFrame->GetMapPointMatches();
-
-  for (size_t i = 0; i < vpMapPointMatches.size(); i++) {
+  for (size_t i = 0; i < vpMapPointMatches.size(); ++i) {
     MapPoint* pMP = vpMapPointMatches[i];
     if (pMP) {
       if (!pMP->isBad()) {
@@ -431,14 +430,14 @@ void LocalMapping::CreateNewMapPoints() {
   // For stereo inertial case
   if (mbMonocular)
     nn = 30;
-  vector<KeyFrame*> vpNeighKFs =
+  std::vector<KeyFrame*> vpNeighKFs =
       mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
 
   if (mbInertial) {
     KeyFrame* pKF = mpCurrentKeyFrame;
     int count = 0;
     while ((vpNeighKFs.size() <= nn) && (pKF->mPrevKF) && (count++ < nn)) {
-      vector<KeyFrame*>::iterator it =
+      std::vector<KeyFrame*>::iterator it =
           std::find(vpNeighKFs.begin(), vpNeighKFs.end(), pKF->mPrevKF);
       if (it == vpNeighKFs.end())
         vpNeighKFs.push_back(pKF->mPrevKF);
@@ -496,9 +495,9 @@ void LocalMapping::CreateNewMapPoints() {
     }
 
     // Search matches that fullfil epipolar constraint
-    vector<pair<size_t, size_t>> vMatchedIndices;
+    std::vector<std::pair<size_t, size_t>> vMatchedIndices;
     bool bCoarse = mbInertial && mpTracker->mState == Tracking::RECENTLY_LOST &&
-                   mpCurrentKeyFrame->GetMap()->GetIniertialBA2();
+                   mpCurrentKeyFrame->GetMap()->GetInertialBA2();
 
     matcher.SearchForTriangulation(mpCurrentKeyFrame, pKF2, vMatchedIndices,
                                    false, bCoarse);
@@ -752,10 +751,10 @@ void LocalMapping::SearchInNeighbors() {
   int nn = 10;
   if (mbMonocular)
     nn = 30;
-  const vector<KeyFrame*> vpNeighKFs =
+  const std::vector<KeyFrame*> vpNeighKFs =
       mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
-  vector<KeyFrame*> vpTargetKFs;
-  for (vector<KeyFrame*>::const_iterator vit = vpNeighKFs.begin(),
+  std::vector<KeyFrame*> vpTargetKFs;
+  for (std::vector<KeyFrame*>::const_iterator vit = vpNeighKFs.begin(),
                                          vend = vpNeighKFs.end();
        vit != vend; vit++) {
     KeyFrame* pKFi = *vit;
@@ -768,9 +767,9 @@ void LocalMapping::SearchInNeighbors() {
   // Add some covisible of covisible
   // Extend to some second neighbors if abort is not requested
   for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
-    const vector<KeyFrame*> vpSecondNeighKFs =
+    const std::vector<KeyFrame*> vpSecondNeighKFs =
         vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
-    for (vector<KeyFrame*>::const_iterator vit2 = vpSecondNeighKFs.begin(),
+    for (std::vector<KeyFrame*>::const_iterator vit2 = vpSecondNeighKFs.begin(),
                                            vend2 = vpSecondNeighKFs.end();
          vit2 != vend2; vit2++) {
       KeyFrame* pKFi2 = *vit2;
@@ -801,8 +800,8 @@ void LocalMapping::SearchInNeighbors() {
 
   // Search matches by projection from current KF in target KFs
   ORBmatcher matcher;
-  vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
-  for (vector<KeyFrame*>::iterator vit = vpTargetKFs.begin(),
+  std::vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
+  for (std::vector<KeyFrame*>::iterator vit = vpTargetKFs.begin(),
                                    vend = vpTargetKFs.end();
        vit != vend; vit++) {
     KeyFrame* pKFi = *vit;
@@ -816,17 +815,17 @@ void LocalMapping::SearchInNeighbors() {
     return;
 
   // Search matches by projection from target KFs in current KF
-  vector<MapPoint*> vpFuseCandidates;
+  std::vector<MapPoint*> vpFuseCandidates;
   vpFuseCandidates.reserve(vpTargetKFs.size() * vpMapPointMatches.size());
 
-  for (vector<KeyFrame*>::iterator vitKF = vpTargetKFs.begin(),
+  for (std::vector<KeyFrame*>::iterator vitKF = vpTargetKFs.begin(),
                                    vendKF = vpTargetKFs.end();
        vitKF != vendKF; vitKF++) {
     KeyFrame* pKFi = *vitKF;
 
-    vector<MapPoint*> vpMapPointsKFi = pKFi->GetMapPointMatches();
+    std::vector<MapPoint*> vpMapPointsKFi = pKFi->GetMapPointMatches();
 
-    for (vector<MapPoint*>::iterator vitMP = vpMapPointsKFi.begin(),
+    for (std::vector<MapPoint*>::iterator vitMP = vpMapPointsKFi.begin(),
                                      vendMP = vpMapPointsKFi.end();
          vitMP != vendMP; vitMP++) {
       MapPoint* pMP = *vitMP;
@@ -933,7 +932,7 @@ void LocalMapping::KeyFrameCulling() {
   // consider close stereo points
   const int Nd = 21;
   mpCurrentKeyFrame->UpdateBestCovisibles();
-  vector<KeyFrame*> vpLocalKeyFrames =
+  std::vector<KeyFrame*> vpLocalKeyFrames =
       mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
 
   float redundant_th;
@@ -959,7 +958,7 @@ void LocalMapping::KeyFrameCulling() {
     last_ID = aux_KF->mnId;
   }
 
-  for (vector<KeyFrame*>::iterator vit = vpLocalKeyFrames.begin(),
+  for (std::vector<KeyFrame*>::iterator vit = vpLocalKeyFrames.begin(),
                                    vend = vpLocalKeyFrames.end();
        vit != vend; vit++) {
     count++;
@@ -967,7 +966,7 @@ void LocalMapping::KeyFrameCulling() {
 
     if ((pKF->mnId == pKF->GetMap()->GetInitKFid()) || pKF->isBad())
       continue;
-    const vector<MapPoint*> vpMapPoints = pKF->GetMapPointMatches();
+    const std::vector<MapPoint*> vpMapPoints = pKF->GetMapPointMatches();
 
     int nObs = 3;
     const int thObs = nObs;
@@ -1049,7 +1048,7 @@ void LocalMapping::KeyFrameCulling() {
             pKF->mNextKF = NULL;
             pKF->mPrevKF = NULL;
             pKF->SetBadFlag();
-          } else if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2() &&
+          } else if (!mpCurrentKeyFrame->GetMap()->GetInertialBA2() &&
                      ((pKF->GetImuPosition() - pKF->mPrevKF->GetImuPosition())
                           .norm() < 0.02) &&
                      (t < 3)) {
@@ -1232,12 +1231,14 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     Eigen::Matrix3f Rwg = Eigen::Matrix3f::Identity();
     Eigen::Vector3f dirG = Eigen::Vector3f::Zero();
 
+    // Compute Initialize velocity and gravity
     auto itKF = vpKF.begin();
     for (; itKF != vpKF.end(); ++itKF) {
       if (!(*itKF)->mpImuPreintegrated || !(*itKF)->mPrevKF) {
         continue;
       }
 
+      // set initialize velocity and gracity direction
       dirG -= (*itKF)->mPrevKF->GetImuRotation() *
               (*itKF)->mpImuPreintegrated->GetUpdatedDeltaVelocity();
       Eigen::Vector3f _vel =
@@ -1254,8 +1255,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     const float cosg = gI.dot(dirG);
     const float ang = acos(cosg);
     Eigen::Vector3f vzg = v * ang / nv;
-    Rwg = Sophus::SO3f::exp(vzg).matrix();
-    mRwg = Rwg.cast<double>();
+    mRwg = (Sophus::SO3f::exp(vzg).matrix()).cast<double>();
     mTinit = mpCurrentKeyFrame->mTimeStamp - mFirstTs;
   } else {
     mRwg = Eigen::Matrix3d::Identity();
@@ -1273,7 +1273,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
   if (mScale < 1e-1) {
-    Verbose::PrintMess("Scale is too small!", Verbose::VERBOSITY_WARN);
+    Verbose::Print("LocalMapping", Verbose::WARN, "Scale is too small!");
     bInitializing = false;
     return;
   }
@@ -1315,8 +1315,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   }
   std::chrono::steady_clock::time_point t5 = std::chrono::steady_clock::now();
 
-  Verbose::PrintMess("Global Bundle Adjustment finished, Updating map ...",
-                     Verbose::VERBOSITY_INFO);
+  Verbose::Print("LocalMapping", Verbose::INFO,
+                 "Global Bundle Adjustment finished, Updating map ...");
 
   // Get Map Mutex
   unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
@@ -1355,8 +1355,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
         if (pChild->isVelocitySet()) {
           pChild->mVwbGBA = Rcor * pChild->GetVelocity();
         } else {
-          Verbose::PrintMess("Child velocity empty!!",
-                             Verbose::VERBOSITY_NORMAL);
+          Verbose::Print("LocalMapping", Verbose::INFO,
+                         "Child velocity empty!!");
         }
 
         pChild->mBiasGBA = pChild->GetImuBias();
@@ -1380,7 +1380,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   }
 
   // Correct MapPoints
-  const vector<MapPoint*> vpMPs = mpAtlas->GetCurrentMap()->GetAllMapPoints();
+  const std::vector<MapPoint*> vpMPs = mpAtlas->GetCurrentMap()->GetAllMapPoints();
 
   for (size_t i = 0; i < vpMPs.size(); ++i) {
     MapPoint* pMP = vpMPs[i];
@@ -1405,7 +1405,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     }
   }
 
-  Verbose::PrintMess("Map Update Finished!", Verbose::VERBOSITY_INFO);
+  Verbose::Print("LocalMapping", Verbose::INFO, "Map Update Finished!");
 
   mnKFs = vpKF.size();
   mIdxInit++;
@@ -1441,7 +1441,7 @@ void LocalMapping::ScaleRefinement() {
     pKF = pKF->mPrevKF;
   }
   lpKF.push_front(pKF);
-  vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
+  std::vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
 
   while (CheckNewKeyFrames()) {
     ProcessNewKeyFrame();

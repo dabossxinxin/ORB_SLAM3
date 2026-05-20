@@ -31,7 +31,7 @@
 using namespace std;
 
 void LoadImages(const string &strImagePath, const string &strPathTimes,
-                vector<string> &vstrImages, vector<double> &vTimeStamps);
+                std::vector<string> &vstrImages, std::vector<double> &vTimeStamps);
 
 double ttrack_tot = 0;
 int main(int argc, char **argv)
@@ -56,9 +56,9 @@ int main(int argc, char **argv)
 
     // Load all sequences:
     int seq;
-    vector< vector<string> > vstrImageFilenames;
-    vector< vector<double> > vTimestampsCam;
-    vector<int> nImages;
+    std::vector< std::vector<string> > vstrImageFilenames;
+    std::vector< std::vector<double> > vTimestampsCam;
+    std::vector<int> nImages;
 
     vstrImageFilenames.resize(num_seq);
     vTimestampsCam.resize(num_seq);
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 
     }
     // Vector for tracking time statistics
-    vector<float> vTimesTrack;
+    std::vector<float> vTimesTrack;
     vTimesTrack.resize(tot_images);
 
     cout << endl << "-------" << endl;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 
 
 void LoadImages(const string &strImagePath, const string &strPathTimes,
-                vector<string> &vstrImages, vector<double> &vTimeStamps)
+                std::vector<string> &vstrImages, std::vector<double> &vTimeStamps)
 {
     ifstream fTimes;
     fTimes.open(strPathTimes.c_str());

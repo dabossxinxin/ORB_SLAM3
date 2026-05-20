@@ -123,8 +123,8 @@ class KeyFrame
         // KeyPoints
         serializeVectorKeyPoints<Archive>(ar, mvKeys, version);
         serializeVectorKeyPoints<Archive>(ar, mvKeysUn, version);
-        ar & const_cast<vector<float>& >(mvuRight);
-        ar & const_cast<vector<float>& >(mvDepth);
+        ar & const_cast<std::vector<float>& >(mvuRight);
+        ar & const_cast<std::vector<float>& >(mvDepth);
         serializeMatrix<Archive>(ar,mDescriptors,version);
         // BOW
         ar & mBowVec;
@@ -135,9 +135,9 @@ class KeyFrame
         ar & const_cast<int&>(mnScaleLevels);
         ar & const_cast<float&>(mfScaleFactor);
         ar & const_cast<float&>(mfLogScaleFactor);
-        ar & const_cast<vector<float>& >(mvScaleFactors);
-        ar & const_cast<vector<float>& >(mvLevelSigma2);
-        ar & const_cast<vector<float>& >(mvInvLevelSigma2);
+        ar & const_cast<std::vector<float>& >(mvScaleFactors);
+        ar & const_cast<std::vector<float>& >(mvLevelSigma2);
+        ar & const_cast<std::vector<float>& >(mvInvLevelSigma2);
         // Image bounds and calibration
         ar & const_cast<int&>(mnMinX);
         ar & const_cast<int&>(mnMinY);

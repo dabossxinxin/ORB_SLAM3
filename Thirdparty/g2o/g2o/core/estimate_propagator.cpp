@@ -185,13 +185,13 @@ namespace g2o {
     }
     cerr << "Writing init.dat" << endl;
     ofstream initStream("init.dat");
-    vector<AdjacencyMapEntry*> frontierLevels;
+    std::vector<AdjacencyMapEntry*> frontierLevels;
     for (AdjacencyMap::iterator it = _adjacencyMap.begin(); it != _adjacencyMap.end(); ++it) {
       if (it->second._frontierLevel > 0)
         frontierLevels.push_back(&it->second);
     }
     sort(frontierLevels.begin(), frontierLevels.end(), FrontierLevelCmp());
-    for (vector<AdjacencyMapEntry*>::const_iterator it = frontierLevels.begin(); it != frontierLevels.end(); ++it) {
+    for (std::vector<AdjacencyMapEntry*>::const_iterator it = frontierLevels.begin(); it != frontierLevels.end(); ++it) {
       AdjacencyMapEntry* entry       = *it;
       OptimizableGraph::Vertex* to   = entry->child();
 

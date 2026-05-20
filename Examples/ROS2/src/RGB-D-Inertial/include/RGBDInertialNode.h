@@ -23,6 +23,8 @@
 #define RGBD_INERTIAL_ROS2_H
 
 #include <cv_bridge/cv_bridge.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include <algorithm>
 #include <chrono>
@@ -49,6 +51,8 @@
 double stamp2Sec(const builtin_interfaces::msg::Time& stamp);
 rclcpp::Time sec2Stamp(double timestamp);
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 class ImageGrabber : public rclcpp::Node {
 public:
   ImageGrabber(ORB_SLAM3::System* pSLAM, const bool bRect, const bool bClahe);
@@ -57,22 +61,26 @@ public:
   void GrabImageRgb(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImageDepth(const sensor_msgs::msg::Image::SharedPtr msg);
   void GrabImu(const sensor_msgs::msg::Imu::SharedPtr imu_msg);
+  void GrabDenseCloud(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg);
   cv::Mat GetImage(const sensor_msgs::msg::Image::SharedPtr img_msg);
   void SyncWithImu();
 
   void PublishWorkLoop();
   void publishOdometryAndPath();
+  void publishSparseCloud();
   void publishDenseCloud();
 
 private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr rgb_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depth_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr
+      dense_cloud_sub_;
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pos_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr dense_cloud_pub_;
 
   // --- Publishing thread synchronization ---
   Sophus::SE3f mCurrentPose;
@@ -83,18 +91,22 @@ private:
   std::condition_variable mPubInfoCv;
   nav_msgs::msg::Path mTrajectory;
   std::thread mPubThread;
+  PointCloudRGB::Ptr mpCurrentDenseCloud;
+  const float mfMaxDepthThres = 3.0f;
+  const float mfMinDepthThres = 0.3f;
 
   // --- Subscribed data buffers ---
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgRgbBuf;
   std::queue<sensor_msgs::msg::Image::SharedPtr> imgDepthBuf;
   std::queue<sensor_msgs::msg::Imu::SharedPtr> imuBuf;
-  std::queue<nav_msgs::msg::Odometry::SharedPtr> odomBuf;
+  std::queue<PointCloudRGB::Ptr> denseCloudBuf;
+  std::queue<double> denseCloudTimeBuf;
 
   // --- Mutexes ---
   std::mutex mBufMutexRgb;
   std::mutex mBufMutexDepth;
-  std::mutex mBufMutex;
-  std::mutex mBufMutexOdom;
+  std::mutex mBufMutexImu;
+  std::mutex mBufMutexDenseCloud;
   std::mutex mTrackMutex;
 
   ORB_SLAM3::System* mpSLAM;

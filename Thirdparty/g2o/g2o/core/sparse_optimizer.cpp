@@ -225,7 +225,7 @@ namespace g2o{
         if (level < 0 || e->level() == level) {
 
           bool allVerticesOK = true;
-          for (vector<HyperGraph::Vertex*>::const_iterator vit = e->vertices().begin(); vit != e->vertices().end(); ++vit) {
+          for (std::vector<HyperGraph::Vertex*>::const_iterator vit = e->vertices().begin(); vit != e->vertices().end(); ++vit) {
             if (vset.find(*vit) == vset.end()) {
               allVerticesOK = false;
               break;
@@ -276,7 +276,7 @@ namespace g2o{
     set<Vertex*> auxVertexSet; // temporary structure to avoid duplicates
     for (HyperGraph::EdgeSet::iterator it=eset.begin(); it!=eset.end(); ++it){
       OptimizableGraph::Edge* e=(OptimizableGraph::Edge*)(*it);
-      for (vector<HyperGraph::Vertex*>::const_iterator vit = e->vertices().begin(); vit != e->vertices().end(); ++vit) {
+      for (std::vector<HyperGraph::Vertex*>::const_iterator vit = e->vertices().begin(); vit != e->vertices().end(); ++vit) {
         auxVertexSet.insert(static_cast<OptimizableGraph::Vertex*>(*vit));
       }
       _activeEdges.push_back(reinterpret_cast<OptimizableGraph::Edge*>(*it));

@@ -172,17 +172,17 @@ int main(int argc, char** argv) {
   std::mutex imu_mutex;
   std::condition_variable cond_image_rec;
 
-  vector<double> v_accel_timestamp;
-  vector<rs2_vector> v_accel_data;
-  vector<double> v_gyro_timestamp;
-  vector<rs2_vector> v_gyro_data;
+  std::vector<double> v_accel_timestamp;
+  std::vector<rs2_vector> v_accel_data;
+  std::vector<double> v_gyro_timestamp;
+  std::vector<rs2_vector> v_gyro_data;
 
   double prev_accel_timestamp = 0;
   rs2_vector prev_accel_data;
   double current_accel_timestamp = 0;
   rs2_vector current_accel_data;
-  vector<double> v_accel_timestamp_sync;
-  vector<rs2_vector> v_accel_data_sync;
+  std::vector<double> v_accel_timestamp_sync;
+  std::vector<rs2_vector> v_accel_data_sync;
 
   cv::Mat imCV, imRightCV;
   int width_img, height_img;
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
 
   rs2::pipeline_profile pipe_profile = pipe.start(cfg, imu_callback);
 
-  vector<ORB_SLAM3::IMU::Point> vImuMeas;
+  std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
   rs2::stream_profile cam_left =
       pipe_profile.get_stream(RS2_STREAM_INFRARED, 1);
   rs2::stream_profile cam_right =
