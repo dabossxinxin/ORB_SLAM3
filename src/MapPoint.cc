@@ -465,32 +465,32 @@ bool MapPoint::IsInKeyFrame(KeyFrame* pKF) {
 }
 
 void MapPoint::UpdateNormalAndDepth() {
-  map<KeyFrame*, tuple<int, int>> observations;
+  std::map<KeyFrame*, tuple<int, int>> observations;
   KeyFrame* pRefKF;
   Eigen::Vector3f Pos;
   {
     unique_lock<mutex> lock1(mMutexFeatures);
     unique_lock<mutex> lock2(mMutexPos);
-    if (mbBad)
+    if (mbBad) {
       return;
+    }
     observations = mObservations;
     pRefKF = mpRefKF;
     Pos = mWorldPos;
   }
 
-  if (observations.empty())
+  if (observations.empty()) {
     return;
+  }
 
+  int n = 0;
   Eigen::Vector3f normal;
   normal.setZero();
-  int n = 0;
-  for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
-                                                 mend = observations.end();
-       mit != mend; mit++) {
+  for (auto mit = observations.begin(); mit != observations.end(); mit++) {
     KeyFrame* pKF = mit->first;
-
     tuple<int, int> indexes = mit->second;
-    int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
+    int leftIndex = get<0>(indexes);
+    int rightIndex = get<1>(indexes);
 
     if (leftIndex != -1) {
       Eigen::Vector3f Owi = pKF->GetCameraCenter();
@@ -509,8 +509,9 @@ void MapPoint::UpdateNormalAndDepth() {
   Eigen::Vector3f PC = Pos - pRefKF->GetCameraCenter();
   const float dist = PC.norm();
 
-  tuple<int, int> indexes = observations[pRefKF];
-  int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
+  std::tuple<int, int> indexes = observations[pRefKF];
+  int leftIndex = get<0>(indexes);
+  int rightIndex = get<1>(indexes);
   int level;
   if (pRefKF->NLeft == -1) {
     level = pRefKF->mvKeysUn[leftIndex].octave;
@@ -525,7 +526,7 @@ void MapPoint::UpdateNormalAndDepth() {
   const int nLevels = pRefKF->mnScaleLevels;
 
   {
-    unique_lock<mutex> lock3(mMutexPos);
+    std::unique_lock<mutex> lock3(mMutexPos);
     mfMaxDistance = dist * levelScaleFactor;
     mfMinDistance = mfMaxDistance / pRefKF->mvScaleFactors[nLevels - 1];
     mNormalVector = normal / n;

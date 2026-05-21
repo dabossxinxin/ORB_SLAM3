@@ -248,8 +248,7 @@ void Map::ApplyScaledRotation(const Sophus::SE3f& T, const float s,
   Eigen::Matrix3f Ryw = Tyw.rotationMatrix();
   Eigen::Vector3f tyw = Tyw.translation();
 
-  for (set<KeyFrame*>::iterator sit = mspKeyFrames.begin();
-       sit != mspKeyFrames.end(); sit++) {
+  for (auto sit = mspKeyFrames.begin(); sit != mspKeyFrames.end(); sit++) {
     KeyFrame* pKF = *sit;
     Sophus::SE3f Twc = pKF->GetPoseInverse();
     Twc.translation() *= s;
@@ -257,13 +256,13 @@ void Map::ApplyScaledRotation(const Sophus::SE3f& T, const float s,
     Sophus::SE3f Tcy = Tyc.inverse();
     pKF->SetPose(Tcy);
     Eigen::Vector3f Vw = pKF->GetVelocity();
-    if (!bScaledVel)
+    if (!bScaledVel) {
       pKF->SetVelocity(Ryw * Vw);
-    else
+    } else {
       pKF->SetVelocity(Ryw * Vw * s);
+    }
   }
-  for (set<MapPoint*>::iterator sit = mspMapPoints.begin();
-       sit != mspMapPoints.end(); sit++) {
+  for (auto sit = mspMapPoints.begin(); sit != mspMapPoints.end(); sit++) {
     MapPoint* pMP = *sit;
     pMP->SetWorldPos(s * Ryw * pMP->GetWorldPos() + tyw);
     pMP->UpdateNormalAndDepth();

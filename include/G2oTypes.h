@@ -515,7 +515,6 @@ public:
   Eigen::Vector3d g;
 };
 
-
 // Edge inertial whre gravity is included as optimizable variable and it is not
 // supposed to be pointing in -z axis, as well as scale
 class EdgeInertialGS : public g2o::BaseMultiEdge<9, Vector9d> {
@@ -601,7 +600,7 @@ public:
   }
 };
 
-
+// edge gyro bias of random walk
 class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Eigen::Vector3d,
                                               VertexGyroBias, VertexGyroBias> {
 public:
@@ -639,7 +638,7 @@ public:
   }
 };
 
-
+// edge acc bias of random walk
 class EdgeAccRW : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, VertexAccBias,
                                              VertexAccBias> {
 public:

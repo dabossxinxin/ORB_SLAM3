@@ -263,7 +263,6 @@ void InvDepthPoint::Update(const double* pu) {
   rho += *pu;
 }
 
-
 bool VertexPose::read(std::istream& is) {
   std::vector<Eigen::Matrix<double, 3, 3>> Rcw;
   std::vector<Eigen::Matrix<double, 3, 1>> tcw;
@@ -478,7 +477,6 @@ VertexAccBias::VertexAccBias(Frame* pF) {
   setEstimate(ba);
 }
 
-
 EdgeInertial::EdgeInertial(IMU::Preintegrated* pInt)
     : JRg(pInt->JRg.cast<double>())
     , JVg(pInt->JVg.cast<double>())
@@ -492,16 +490,17 @@ EdgeInertial::EdgeInertial(IMU::Preintegrated* pInt)
   g << 0, 0, -IMU::GRAVITY_VALUE;
 
   Matrix9d Info = pInt->C.block<9, 9>(0, 0).cast<double>().inverse();
-  Info = (Info + Info.transpose()) / 2;
+  Info = (Info + Info.transpose()) * 0.5;
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> es(Info);
   Eigen::Matrix<double, 9, 1> eigs = es.eigenvalues();
-  for (int i = 0; i < 9; i++)
-    if (eigs[i] < 1e-12)
+  for (int i = 0; i < 9; ++i) {
+    if (eigs[i] < 1e-12) {
       eigs[i] = 0;
+    }
+  }
   Info = es.eigenvectors() * eigs.asDiagonal() * es.eigenvectors().transpose();
   setInformation(Info);
 }
-
 
 void EdgeInertial::computeError() {
   // TODO Maybe Reintegrate inertial measurments when difference between
@@ -610,7 +609,7 @@ EdgeInertialGS::EdgeInertialGS(IMU::Preintegrated* pInt)
 
   // remove inertial noise
   Matrix9d Info = pInt->C.block<9, 9>(0, 0).cast<double>().inverse();
-  Info = (Info + Info.transpose()) / 2;
+  Info = (Info + Info.transpose()) * 0.5;
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> es(Info);
   Eigen::Matrix<double, 9, 1> eigs = es.eigenvalues();
   for (int i = 0; i < 9; ++i) {
@@ -782,13 +781,13 @@ void EdgePriorPoseImu::linearizeOplus() {
 }
 
 void EdgePriorAcc::linearizeOplus() {
-  // Jacobian wrt bias
-  _jacobianOplusXi.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
+  // error = bprior - estimate  →  ∂error/∂estimate = -I
+  _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();
 }
 
 void EdgePriorGyro::linearizeOplus() {
-  // Jacobian wrt bias
-  _jacobianOplusXi.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
+  // error = bprior - estimate  →  ∂error/∂estimate = -I
+  _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();
 }
 
 // SO3 FUNCTIONS
