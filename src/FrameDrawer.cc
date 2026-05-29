@@ -52,15 +52,15 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale)
     std::vector<MapPoint*> vpMatchedMPs;
     std::vector<cv::KeyPoint> vOutlierKeys;
     std::vector<MapPoint*> vpOutlierMPs;
-    map<long unsigned int, cv::Point2f> mProjectPoints;
-    map<long unsigned int, cv::Point2f> mMatchedInImage;
+    std::map<long unsigned int, cv::Point2f> mProjectPoints;
+    std::map<long unsigned int, cv::Point2f> mMatchedInImage;
 
     cv::Scalar standardColor(0,255,0);
     cv::Scalar odometryColor(255,0,0);
 
     //Copy variables within scoped mutex
     {
-        unique_lock<mutex> lock(mMutex);
+        std::unique_lock<mutex> lock(mMutex);
         state=mState;
         if(mState==Tracking::SYSTEM_NOT_READY)
             mState=Tracking::NO_IMAGES_YET;
@@ -212,7 +212,7 @@ cv::Mat FrameDrawer::DrawRightFrame(float imageScale)
 
     //Copy variables within scoped mutex
     {
-        unique_lock<mutex> lock(mMutex);
+        std::unique_lock<mutex> lock(mMutex);
         state=mState;
         if(mState==Tracking::SYSTEM_NOT_READY)
             mState=Tracking::NO_IMAGES_YET;
@@ -369,7 +369,7 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 
 void FrameDrawer::Update(Tracking *pTracker)
 {
-    unique_lock<mutex> lock(mMutex);
+    std::unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     mThDepth = pTracker->mCurrentFrame.mThDepth;

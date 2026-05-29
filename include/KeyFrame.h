@@ -297,7 +297,7 @@ public:
     bool ProjectPointUnDistort(MapPoint* pMP, cv::Point2f &kp, float &u, float &v);
 
     void PreSave(set<KeyFrame*>& spKF,set<MapPoint*>& spMP, set<GeometricCamera*>& spCam);
-    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsigned int, MapPoint*>& mpMPid, map<unsigned int, GeometricCamera*>& mpCamId);
+    void PostLoad(std::map<long unsigned int, KeyFrame*>& mpKFid, std::map<long unsigned int, MapPoint*>& mpMPid, std::map<unsigned int, GeometricCamera*>& mpCamId);
 
 
     void SetORBVocabulary(ORBVocabulary* pORBVoc);

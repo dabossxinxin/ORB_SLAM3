@@ -299,8 +299,8 @@ public:
 
   static bool mbInitialComputations;
 
-  map<long unsigned int, cv::Point2f> mmProjectPoints;
-  map<long unsigned int, cv::Point2f> mmMatchedInImage;
+  std::map<long unsigned int, cv::Point2f> mmProjectPoints;
+  std::map<long unsigned int, cv::Point2f> mmMatchedInImage;
 
   string mNameFile;
 

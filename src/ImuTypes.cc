@@ -87,7 +87,7 @@ IntegratedRotation::IntegratedRotation(const Eigen::Vector3f& angVel,
   const float z = (angVel(2) - imuBias.bwz) * time;
 
   const float d2 = x * x + y * y + z * z;
-  const float d = sqrt(d2);
+  const float d = std::sqrt(d2);
 
   Eigen::Vector3f v;
   v << x, y, z;
@@ -185,7 +185,7 @@ void Preintegrated::Reintegrate() {
 void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
                                             const Eigen::Vector3f& angVel,
                                             const float& dt) {
-  mvMeasurements.push_back(integrable(acceleration, angVel, dt));
+  mvMeasurements.emplace_back(integrable(acceleration, angVel, dt));
 
   // Position is updated firstly, as it depends on previously computed velocity
   // and rotation. Velocity is updated secondly, as it depends on previously
@@ -219,7 +219,6 @@ void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
   A.block<3, 3>(6, 3) = Eigen::DiagonalMatrix<float, 3>(dt, dt, dt);
   B.block<3, 3>(3, 3) = dR * dt;
   B.block<3, 3>(6, 3) = 0.5f * dR * dt * dt;
-
 
   // Update position and velocity jacobians wrt bias correction
   JPa = JPa + JVa * dt - 0.5f * dR * dt * dt;

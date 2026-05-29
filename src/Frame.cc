@@ -460,7 +460,7 @@ Frame::Frame(const cv::Mat& imGray, const double& timeStamp,
 
   mvpMapPoints = std::vector<MapPoint*>(N, static_cast<MapPoint*>(NULL));
 
-  mmProjectPoints.clear();  // = map<long unsigned int, cv::Point2f>(N,
+  mmProjectPoints.clear();  // = std::map<long unsigned int, cv::Point2f>(N,
                             // static_cast<cv::Point2f>(NULL));
   mmMatchedInImage.clear();
 
@@ -634,7 +634,7 @@ Eigen::Vector3f Frame::GetRelativePoseTlr_translation() {
 
 
 bool Frame::isInFrustum(MapPoint* pMP, float viewingCosLimit) {
-  if (Nleft == -1) {
+  if (Nleft == -1) {  // monocular case
     pMP->mbTrackInView = false;
     pMP->mTrackProjX = -1;
     pMP->mTrackProjY = -1;
@@ -649,15 +649,17 @@ bool Frame::isInFrustum(MapPoint* pMP, float viewingCosLimit) {
     // Check positive depth
     const float& PcZ = Pc(2);
     const float invz = 1.0f / PcZ;
-    if (PcZ < 0.0f)
+    if (PcZ < 0.0f) {
       return false;
+    }
 
     const Eigen::Vector2f uv = mpCamera->project(Pc);
-
-    if (uv(0) < mnMinX || uv(0) > mnMaxX)
+    if (uv(0) < mnMinX || uv(0) > mnMaxX) {
       return false;
-    if (uv(1) < mnMinY || uv(1) > mnMaxY)
+    }
+    if (uv(1) < mnMinY || uv(1) > mnMaxY) {
       return false;
+    }
 
     pMP->mTrackProjX = uv(0);
     pMP->mTrackProjY = uv(1);
@@ -668,16 +670,16 @@ bool Frame::isInFrustum(MapPoint* pMP, float viewingCosLimit) {
     const Eigen::Vector3f PO = P - mOw;
     const float dist = PO.norm();
 
-    if (dist < minDistance || dist > maxDistance)
+    if (dist < minDistance || dist > maxDistance) {
       return false;
+    }
 
-    // Check viewing angle
+    // Check viewing angle, if > 60 degree, return false
     Eigen::Vector3f Pn = pMP->GetNormal();
-
     const float viewCos = PO.dot(Pn) / dist;
-
-    if (viewCos < viewingCosLimit)
+    if (viewCos < viewingCosLimit) {
       return false;
+    }
 
     // Predict scale in the image
     const int nPredictedLevel = pMP->PredictScale(dist, this);
@@ -686,15 +688,13 @@ bool Frame::isInFrustum(MapPoint* pMP, float viewingCosLimit) {
     pMP->mbTrackInView = true;
     pMP->mTrackProjX = uv(0);
     pMP->mTrackProjXR = uv(0) - mbf * invz;
-
     pMP->mTrackDepth = Pc_dist;
-
     pMP->mTrackProjY = uv(1);
     pMP->mnTrackScaleLevel = nPredictedLevel;
     pMP->mTrackViewCos = viewCos;
 
     return true;
-  } else {
+  } else {  // stereo case
     pMP->mbTrackInView = false;
     pMP->mbTrackInViewR = false;
     pMP->mnTrackScaleLevel = -1;
@@ -773,9 +773,9 @@ Eigen::Vector3f Frame::inRefCoordinates(Eigen::Vector3f pCw) {
 }
 
 std::vector<size_t> Frame::GetFeaturesInArea(const float& x, const float& y,
-                                        const float& r, const int minLevel,
-                                        const int maxLevel,
-                                        const bool bRight) const {
+                                             const float& r, const int minLevel,
+                                             const int maxLevel,
+                                             const bool bRight) const {
   std::vector<size_t> vIndices;
   vIndices.reserve(N);
 
@@ -857,7 +857,8 @@ bool Frame::PosInGrid(const cv::KeyPoint& kp, int& posX, int& posY) {
 
 void Frame::ComputeBoW() {
   if (mBowVec.empty()) {
-    std::vector<cv::Mat> vCurrentDesc = Converter::toDescriptorVector(mDescriptors);
+    std::vector<cv::Mat> vCurrentDesc =
+        Converter::toDescriptorVector(mDescriptors);
     mpORBvocabulary->transform(vCurrentDesc, mBowVec, mFeatVec, 4);
   }
 }
@@ -1127,12 +1128,12 @@ bool Frame::UnprojectStereo(const int& i, Eigen::Vector3f& x3D) {
 }
 
 bool Frame::imuIsPreintegrated() {
-  unique_lock<std::mutex> lock(*mpMutexImu);
+  std::unique_lock<std::mutex> lock(*mpMutexImu);
   return mbImuPreintegrated;
 }
 
 void Frame::setIntegrated() {
-  unique_lock<std::mutex> lock(*mpMutexImu);
+  std::unique_lock<std::mutex> lock(*mpMutexImu);
   mbImuPreintegrated = true;
 }
 
@@ -1269,7 +1270,7 @@ void Frame::ComputeStereoFishEyeMatches() {
   // Speed it up by matching keypoints in the lapping area
   std::vector<cv::KeyPoint> stereoLeft(mvKeys.begin() + monoLeft, mvKeys.end());
   std::vector<cv::KeyPoint> stereoRight(mvKeysRight.begin() + monoRight,
-                                   mvKeysRight.end());
+                                        mvKeysRight.end());
 
   cv::Mat stereoDescLeft = mDescriptors.rowRange(monoLeft, mDescriptors.rows);
   cv::Mat stereoDescRight =

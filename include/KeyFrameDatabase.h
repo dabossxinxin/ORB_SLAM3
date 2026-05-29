@@ -79,7 +79,7 @@ public:
     std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F, Map* pMap);
 
     void PreSave();
-    void PostLoad(map<long unsigned int, KeyFrame*> mpKFid);
+    void PostLoad(std::map<long unsigned int, KeyFrame*> mpKFid);
     void SetORBVocabulary(ORBVocabulary* pORBVoc);
 
 protected:

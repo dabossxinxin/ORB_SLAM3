@@ -143,11 +143,11 @@ void Optimizer::BundleAdjustment(const std::vector<KeyFrame*>& vpKFs,
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
 
-    const map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
 
     int nEdges = 0;
     // SET EDGES
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator mit =
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator mit =
              observations.begin();
          mit != observations.end(); mit++) {
       KeyFrame* pKF = mit->first;
@@ -596,7 +596,7 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
     bool bAllFixed = true;
 
     // Set edges
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
              mit = observations.begin(),
              mend = observations.end();
          mit != mend; mit++) {
@@ -839,7 +839,7 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
   const float deltaStereo = sqrt(7.815);
 
   {
-    unique_lock<mutex> lock(MapPoint::mGlobalMutex);
+    std::unique_lock<mutex> lock(MapPoint::mGlobalMutex);
 
     for (int i = 0; i < N; i++) {
       MapPoint* pMP = pFrame->mvpMapPoints[i];
@@ -1143,8 +1143,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pKF, bool* pbStopFlag,
   for (list<MapPoint*>::iterator lit = lLocalMapPoints.begin(),
                                  lend = lLocalMapPoints.end();
        lit != lend; lit++) {
-    map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
-    for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
+    std::map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
                                                    mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
@@ -1279,10 +1279,10 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pKF, bool* pbStopFlag,
     optimizer.addVertex(vPoint);
     nPoints++;
 
-    const map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
 
     // Set edges
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
              mit = observations.begin(),
              mend = observations.end();
          mit != mend; mit++) {
@@ -1452,7 +1452,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pKF, bool* pbStopFlag,
   }
 
   // Get Map Mutex
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
   if (!vToErase.empty()) {
     for (size_t i = 0; i < vToErase.size(); i++) {
@@ -1495,7 +1495,7 @@ void Optimizer::OptimizeEssentialGraph(
     Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
     const LoopClosing::KeyFrameAndPose& NonCorrectedSim3,
     const LoopClosing::KeyFrameAndPose& CorrectedSim3,
-    const map<KeyFrame*, set<KeyFrame*>>& LoopConnections,
+    const std::map<KeyFrame*, set<KeyFrame*>>& LoopConnections,
     const bool& bFixScale) {
   // Setup optimizer
   g2o::SparseOptimizer optimizer;
@@ -1567,7 +1567,7 @@ void Optimizer::OptimizeEssentialGraph(
 
   // Set Loop edges
   int count_loop = 0;
-  for (map<KeyFrame*, set<KeyFrame*>>::const_iterator
+  for (std::map<KeyFrame*, set<KeyFrame*>>::const_iterator
            mit = LoopConnections.begin(),
            mend = LoopConnections.end();
        mit != mend; mit++) {
@@ -1739,7 +1739,7 @@ void Optimizer::OptimizeEssentialGraph(
   optimizer.computeActiveErrors();
   optimizer.optimize(20);
   optimizer.computeActiveErrors();
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
   // SE3 Pose Recovering. Sim3:[sR t;0 1] -> SE3:[R t/s;0 1]
   for (size_t i = 0; i < vpKFs.size(); i++) {
@@ -2068,7 +2068,7 @@ void Optimizer::OptimizeEssentialGraph(
   optimizer.initializeOptimization();
   optimizer.optimize(20);
 
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
   // SE3 Pose Recovering. Sim3:[sR t;0 1] -> SE3:[R t/s;0 1]
   for (KeyFrame* pKFi : vpNonFixedKFs) {
@@ -2481,8 +2481,8 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   for (list<MapPoint*>::iterator lit = lLocalMapPoints.begin(),
                                  lend = lLocalMapPoints.end();
        lit != lend; lit++) {
-    map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
-    for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
+    std::map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
                                                    mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
@@ -2700,7 +2700,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
 
   const unsigned long iniMPid = maxKFid * 5;
 
-  map<int, int> mVisEdges;
+  std::map<int, int> mVisEdges;
   for (int i = 0; i < N; i++) {
     KeyFrame* pKFi = vpOptimizableKFs[i];
     mVisEdges[pKFi->mnId] = 0;
@@ -2722,10 +2722,10 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
     vPoint->setId(id);
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
-    const map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
 
     // Create visual constraints
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
              mit = observations.begin(),
              mend = observations.end();
          mit != mend; mit++) {
@@ -2846,7 +2846,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   }
 
   // cout << "Total map points: " << lLocalMapPoints.size() << endl;
-  for (map<int, int>::iterator mit = mVisEdges.begin(), mend = mVisEdges.end();
+  for (std::map<int, int>::iterator mit = mVisEdges.begin(), mend = mVisEdges.end();
        mit != mend; mit++) {
     assert(mit->second >= 3);
   }
@@ -2894,7 +2894,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   }
 
   // Get Map Mutex and erase outliers
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
   // TODO: Some convergence problems have been detected here
   if ((2 * err < err_end || isnan(err) || isnan(err_end)) && !bLarge)  // bGN)
@@ -3637,9 +3637,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
   const float thHuber3D = sqrt(7.815);
 
   // Set MapPoint vertices
-  map<KeyFrame*, int> mpObsKFs;
-  map<KeyFrame*, int> mpObsFinalKFs;
-  map<MapPoint*, int> mpObsMPs;
+  std::map<KeyFrame*, int> mpObsKFs;
+  std::map<KeyFrame*, int> mpObsFinalKFs;
+  std::map<MapPoint*, int> mpObsMPs;
   for (unsigned int i = 0; i < vpMPs.size(); ++i) {
     MapPoint* pMPi = vpMPs[i];
     if (pMPi->isBad())
@@ -3652,11 +3652,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
 
-    const map<KeyFrame*, tuple<int, int>> observations =
+    const std::map<KeyFrame*, tuple<int, int>> observations =
         pMPi->GetObservations();
     int nEdges = 0;
     // SET EDGES
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator mit =
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator mit =
              observations.begin();
          mit != observations.end(); mit++) {
       KeyFrame* pKF = mit->first;
@@ -3750,7 +3750,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
     if (*pbStopFlag)
       bDoMore = false;
 
-  map<unsigned long int, int> mWrongObsKF;
+  std::map<unsigned long int, int> mWrongObsKF;
   if (bDoMore) {
     // Check inlier observations
     int badMonoMP = 0, badStereoMP = 0;
@@ -3840,7 +3840,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
                      to_string(badStereoMP) + " sterero bad edges");
 
   // Get Map Mutex
-  unique_lock<mutex> lock(pMainKF->GetMap()->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMainKF->GetMap()->mMutexMapUpdate);
 
   if (!vToErase.empty()) {
     for (size_t i = 0; i < vToErase.size(); i++) {
@@ -3855,9 +3855,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
     if (pMPi->isBad())
       continue;
 
-    const map<KeyFrame*, tuple<int, int>> observations =
+    const std::map<KeyFrame*, tuple<int, int>> observations =
         pMPi->GetObservations();
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator mit =
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator mit =
              observations.begin();
          mit != observations.end(); mit++) {
       KeyFrame* pKF = mit->first;
@@ -4027,7 +4027,7 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
 
   // Optimizable points seen by optimizable keyframes
   list<MapPoint*> lLocalMapPoints;
-  map<MapPoint*, int> mLocalObs;
+  std::map<MapPoint*, int> mLocalObs;
   for (int i = 0; i < N; i++) {
     std::vector<MapPoint*> vpMPs = vpOptimizableKFs[i]->GetMapPointMatches();
     for (std::vector<MapPoint*>::iterator vit = vpMPs.begin(),
@@ -4060,11 +4060,11 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
   for (std::vector<std::pair<MapPoint*, int>>::iterator lit = pairs.begin(),
                                                         lend = pairs.end();
        lit != lend; lit++, i++) {
-    map<KeyFrame*, tuple<int, int>> observations =
+    std::map<KeyFrame*, tuple<int, int>> observations =
         lit->first->GetObservations();
     if (i >= maxCovKF)
       break;
-    for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
                                                    mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
@@ -4297,10 +4297,10 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
 
-    const map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
 
     // Create visual constraints
-    for (map<KeyFrame*, tuple<int, int>>::const_iterator
+    for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
              mit = observations.begin(),
              mend = observations.end();
          mit != mend; mit++) {
@@ -4416,7 +4416,7 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
   }
 
   // Get Map Mutex and erase outliers
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
   if (!vToErase.empty()) {
     for (size_t i = 0; i < vToErase.size(); i++) {
       KeyFrame* pKFi = vToErase[i].first;
@@ -4549,7 +4549,7 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
   const float thHuberStereo = sqrt(7.815);
 
   {
-    unique_lock<mutex> lock(MapPoint::mGlobalMutex);
+    std::unique_lock<mutex> lock(MapPoint::mGlobalMutex);
 
     for (int i = 0; i < N; i++) {
       MapPoint* pMP = pFrame->mvpMapPoints[i];
@@ -4918,7 +4918,7 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
   const float thHuberStereo = sqrt(7.815);
 
   {
-    unique_lock<mutex> lock(MapPoint::mGlobalMutex);
+    std::unique_lock<mutex> lock(MapPoint::mGlobalMutex);
 
     for (int i = 0; i < N; i++) {
       MapPoint* pMP = pFrame->mvpMapPoints[i];
@@ -5269,7 +5269,7 @@ void Optimizer::OptimizeEssentialGraph4DoF(
     Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
     const LoopClosing::KeyFrameAndPose& NonCorrectedSim3,
     const LoopClosing::KeyFrameAndPose& CorrectedSim3,
-    const map<KeyFrame*, set<KeyFrame*>>& LoopConnections) {
+    const std::map<KeyFrame*, set<KeyFrame*>>& LoopConnections) {
   typedef g2o::BlockSolver<g2o::BlockSolverTraits<4, 4>> BlockSolver_4_4;
 
   // Setup optimizer
@@ -5344,7 +5344,7 @@ void Optimizer::OptimizeEssentialGraph4DoF(
 
   // Set Loop edges
   Edge4DoF* e_loop;
-  for (map<KeyFrame*, set<KeyFrame*>>::const_iterator
+  for (std::map<KeyFrame*, set<KeyFrame*>>::const_iterator
            mit = LoopConnections.begin(),
            mend = LoopConnections.end();
        mit != mend; mit++) {
@@ -5536,7 +5536,7 @@ void Optimizer::OptimizeEssentialGraph4DoF(
   optimizer.computeActiveErrors();
   optimizer.optimize(20);
 
-  unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+  std::unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
   // SE3 Pose Recovering. Sim3:[sR t;0 1] -> SE3:[R t/s;0 1]
   for (size_t i = 0; i < vpKFs.size(); i++) {

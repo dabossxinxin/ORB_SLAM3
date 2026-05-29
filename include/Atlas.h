@@ -127,7 +127,7 @@ public:
     void PreSave();
     void PostLoad();
 
-    map<long unsigned int, KeyFrame*> GetAtlasKeyframes();
+    std::map<long unsigned int, KeyFrame*> GetAtlasKeyframes();
 
     void SetKeyFrameDababase(KeyFrameDatabase* pKFDB);
     KeyFrameDatabase* GetKeyFrameDatabase();

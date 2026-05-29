@@ -136,8 +136,8 @@ public:
   void PostLoad(
       KeyFrameDatabase* pKFDB,
       ORBVocabulary*
-          pORBVoc /*, map<long unsigned int, KeyFrame*>& mpKeyFrameId*/,
-      map<unsigned int, GeometricCamera*>& mpCams);
+          pORBVoc /*, std::map<long unsigned int, KeyFrame*>& mpKeyFrameId*/,
+      std::map<unsigned int, GeometricCamera*>& mpCams);
 
   void printReprojectionError(list<KeyFrame*>& lpLocalWindowKFs,
                               KeyFrame* mpCurrentKF, string& name,
