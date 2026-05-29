@@ -3615,35 +3615,34 @@ void Tracking::Reset(bool bLocMap) {
 
   if (mpViewer) {
     mpViewer->RequestStop();
-    while (!mpViewer->isStopped())
+    while (!mpViewer->isStopped()) {
       usleep(3000);
+    }
   }
 
   // Reset Local Mapping
   if (!bLocMap) {
-    Verbose::Print("Tracking", Verbose::INFO, "Reseting Local Mapper...");
     mpLocalMapper->RequestReset();
-    Verbose::Print("Tracking", Verbose::INFO, "done");
+    Verbose::Print("Tracking", Verbose::INFO, "Reseting Local Mapper done!");
   }
 
   // Reset Loop Closing
-  Verbose::Print("Tracking", Verbose::INFO, "Reseting Loop Closing...");
   mpLoopClosing->RequestReset();
-  Verbose::Print("Tracking", Verbose::INFO, "done");
+  Verbose::Print("Tracking", Verbose::INFO, "Reseting Loop Closing done!");
 
   // Clear BoW Database
-  Verbose::Print("Tracking", Verbose::INFO, "Reseting Database...");
   mpKeyFrameDB->clear();
-  Verbose::Print("Tracking", Verbose::INFO, "done");
+  Verbose::Print("Tracking", Verbose::INFO, "Reseting Database done!");
 
   // Clear Map (this erase MapPoints and KeyFrames)
   mpAtlas->clearAtlas();
   mpAtlas->CreateNewMap();
   if (mSensor == System::IMU_STEREO || mSensor == System::IMU_MONOCULAR ||
-      mSensor == System::IMU_RGBD)
+      mSensor == System::IMU_RGBD) {
     mpAtlas->SetInertialSensor();
-  mnInitialFrameId = 0;
+  }
 
+  mnInitialFrameId = 0;
   KeyFrame::nNextId = 0;
   Frame::nNextId = 0;
   mState = NO_IMAGES_YET;
@@ -3662,10 +3661,12 @@ void Tracking::Reset(bool bLocMap) {
   mpLastKeyFrame = static_cast<KeyFrame*>(NULL);
   mvIniMatches.clear();
 
-  if (mpViewer)
+  if (mpViewer) {
     mpViewer->Release();
+    Verbose::Print("Tracking", Verbose::INFO, "Reseting Viewer done!");
+  }
 
-  Verbose::Print("Tracking", Verbose::INFO, "   End reseting! ");
+  Verbose::Print("Tracking", Verbose::INFO, "End reseting!");
 }
 
 void Tracking::ResetActiveMap(bool bLocMap) {
