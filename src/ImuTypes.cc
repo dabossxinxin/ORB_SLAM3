@@ -178,8 +178,9 @@ void Preintegrated::Reintegrate() {
   std::unique_lock<std::mutex> lock(mMutex);
   const std::vector<integrable> aux = mvMeasurements;
   Initialize(bu);
-  for (size_t i = 0; i < aux.size(); i++)
+  for (size_t i = 0; i < aux.size(); ++i) {
     IntegrateNewMeasurement(aux[i].a, aux[i].w, aux[i].t);
+  }
 }
 
 void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
@@ -264,10 +265,12 @@ void Preintegrated::MergePrevious(Preintegrated* pPrev) {
   const std::vector<integrable> aux2 = mvMeasurements;
 
   Initialize(bav);
-  for (size_t i = 0; i < aux1.size(); i++)
+  for (size_t i = 0; i < aux1.size(); ++i) {
     IntegrateNewMeasurement(aux1[i].a, aux1[i].w, aux1[i].t);
-  for (size_t i = 0; i < aux2.size(); i++)
+  }
+  for (size_t i = 0; i < aux2.size(); ++i) {
     IntegrateNewMeasurement(aux2[i].a, aux2[i].w, aux2[i].t);
+  }
 }
 
 void Preintegrated::SetNewBias(const Bias& bu_) {

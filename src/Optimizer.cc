@@ -143,7 +143,8 @@ void Optimizer::BundleAdjustment(const std::vector<KeyFrame*>& vpKFs,
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
 
-    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations =
+        pMP->GetObservations();
 
     int nEdges = 0;
     // SET EDGES
@@ -1143,9 +1144,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pKF, bool* pbStopFlag,
   for (list<MapPoint*>::iterator lit = lLocalMapPoints.begin(),
                                  lend = lLocalMapPoints.end();
        lit != lend; lit++) {
-    std::map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
-    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
-                                                   mend = observations.end();
+    std::map<KeyFrame*, tuple<int, int>> observations =
+        (*lit)->GetObservations();
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator
+             mit = observations.begin(),
+             mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
 
@@ -1279,7 +1282,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pKF, bool* pbStopFlag,
     optimizer.addVertex(vPoint);
     nPoints++;
 
-    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations =
+        pMP->GetObservations();
 
     // Set edges
     for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
@@ -2481,9 +2485,11 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   for (list<MapPoint*>::iterator lit = lLocalMapPoints.begin(),
                                  lend = lLocalMapPoints.end();
        lit != lend; lit++) {
-    std::map<KeyFrame*, tuple<int, int>> observations = (*lit)->GetObservations();
-    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
-                                                   mend = observations.end();
+    std::map<KeyFrame*, tuple<int, int>> observations =
+        (*lit)->GetObservations();
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator
+             mit = observations.begin(),
+             mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
 
@@ -2722,7 +2728,8 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
     vPoint->setId(id);
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
-    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations =
+        pMP->GetObservations();
 
     // Create visual constraints
     for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
@@ -2846,7 +2853,8 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   }
 
   // cout << "Total map points: " << lLocalMapPoints.size() << endl;
-  for (std::map<int, int>::iterator mit = mVisEdges.begin(), mend = mVisEdges.end();
+  for (std::map<int, int>::iterator mit = mVisEdges.begin(),
+                                    mend = mVisEdges.end();
        mit != mend; mit++) {
     assert(mit->second >= 3);
   }
@@ -4064,8 +4072,9 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
         lit->first->GetObservations();
     if (i >= maxCovKF)
       break;
-    for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
-                                                   mend = observations.end();
+    for (std::map<KeyFrame*, tuple<int, int>>::iterator
+             mit = observations.begin(),
+             mend = observations.end();
          mit != mend; mit++) {
       KeyFrame* pKFi = mit->first;
 
@@ -4297,7 +4306,8 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
 
-    const std::map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+    const std::map<KeyFrame*, tuple<int, int>> observations =
+        pMP->GetObservations();
 
     // Create visual constraints
     for (std::map<KeyFrame*, tuple<int, int>>::const_iterator
