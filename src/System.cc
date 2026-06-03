@@ -103,8 +103,6 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
   mStrVocabularyFilePath = strVocFile;
 
-  bool loadedAtlas = false;
-
   if (mStrLoadAtlasFromFile.empty()) {
     // Load ORB Vocabulary
     cout << endl
@@ -160,8 +158,6 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
     // cout << "KF in DB: " << mpKeyFrameDatabase->mnNumKFs << "; words: " <<
     // mpKeyFrameDatabase->mnNumWords << endl;
-
-    loadedAtlas = true;
 
     mpAtlas->CreateNewMap();
 
@@ -640,20 +636,25 @@ void System::SaveKeyFrameTrajectoryTUM(const string& filename) {
 
 void System::SaveTrajectoryEuRoC(const string& filename) {
   Verbose::Print("System", Verbose::INFO, "Saving trajectory to file %s",
-                 filename);
+                 filename.c_str());
   std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
-  Verbose::Print("System", Verbose::INFO, "There are %d maps in the atlas",
+  Verbose::Print("System", Verbose::INFO, "There are %ld maps in the atlas",
                  vpMaps.size());
 
-  int numMaxKFs = 0;
-  Map* pBiggerMap;
+  size_t numMaxKFs = 0;
+  Map* pBiggerMap = nullptr;
   for (Map* pMap : vpMaps) {
-    Verbose::Print("System", Verbose::INFO, "Map %d has %d KFs", pMap->GetId(),
-                   pMap->GetAllKeyFrames().size());
+    Verbose::Print("System", Verbose::INFO, "Map %ld has %ld KFs",
+                   pMap->GetId(), pMap->GetAllKeyFrames().size());
     if (pMap->GetAllKeyFrames().size() > numMaxKFs) {
       numMaxKFs = pMap->GetAllKeyFrames().size();
       pBiggerMap = pMap;
     }
+  }
+
+  if (!pBiggerMap) {
+    Verbose::Print("System", Verbose::ERROR, "There is not a map!!");
+    return;
   }
 
   std::vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
@@ -732,15 +733,14 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
   }
   f.close();
   Verbose::Print("System", Verbose::INFO, "End of saving trajectory to %s",
-                 filename);
+                 filename.c_str());
 }
 
 void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
   Verbose::Print("System", Verbose::INFO,
-                 "Saving trajectory of map %d to file %s", pMap->GetId(),
-                 filename);
+                 "Saving trajectory of map %ld to file %s", pMap->GetId(),
+                 filename.c_str());
 
-  int numMaxKFs = 0;
   std::vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
   std::sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
@@ -840,11 +840,11 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
 
 void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
   Verbose::Print("System", Verbose::INFO,
-                 "Saving keyframe trajectory to file %s", filename);
+                 "Saving keyframe trajectory to file %s", filename.c_str());
 
   std::vector<Map*> vpMaps = mpAtlas->GetAllMaps();
-  Map* pBiggerMap;
-  int numMaxKFs = 0;
+  Map* pBiggerMap = nullptr;
+  size_t numMaxKFs = 0;
   for (Map* pMap : vpMaps) {
     if (pMap && pMap->GetAllKeyFrames().size() > numMaxKFs) {
       numMaxKFs = pMap->GetAllKeyFrames().size();
@@ -895,8 +895,8 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
 
 void System::SaveKeyFrameTrajectoryEuRoC(const string& filename, Map* pMap) {
   Verbose::Print("System", Verbose::INFO,
-                 "Saving keyframe trajectory of map %d to file %s",
-                 pMap->GetId(), filename);
+                 "Saving keyframe trajectory of map %ld to file %s",
+                 pMap->GetId(), filename.c_str());
 
   std::vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
   std::sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);

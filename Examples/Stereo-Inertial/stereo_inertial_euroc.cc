@@ -232,8 +232,9 @@ int main(int argc, char** argv) {
 
   // Save camera trajectory
   if (bFileName) {
-    const string kf_file = "kf_" + string(argv[argc - 1]) + ".txt";
-    const string f_file = "f_" + string(argv[argc - 1]) + ".txt";
+    const std::string kf_file =
+        "keyframe_" + std::string(argv[argc - 1]) + ".txt";
+    const std::string f_file = "frame_" + std::string(argv[argc - 1]) + ".txt";
     SLAM.SaveTrajectoryEuRoC(f_file);
     SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
   } else {
@@ -248,16 +249,16 @@ void LoadImages(const string& strPathLeft, const string& strPathRight,
                 const string& strPathTimes, std::vector<string>& vstrImageLeft,
                 std::vector<string>& vstrImageRight,
                 std::vector<double>& vTimeStamps) {
-  ifstream fTimes;
+  std::ifstream fTimes;
   fTimes.open(strPathTimes.c_str());
   vTimeStamps.reserve(5000);
   vstrImageLeft.reserve(5000);
   vstrImageRight.reserve(5000);
   while (!fTimes.eof()) {
-    string s;
-    getline(fTimes, s);
+    std::string s;
+    std::getline(fTimes, s);
     if (!s.empty()) {
-      stringstream ss;
+      std::stringstream ss;
       ss << s;
       vstrImageLeft.push_back(strPathLeft + "/" + ss.str() + ".png");
       vstrImageRight.push_back(strPathRight + "/" + ss.str() + ".png");
@@ -270,24 +271,24 @@ void LoadImages(const string& strPathLeft, const string& strPathRight,
 
 void LoadIMU(const string& strImuPath, std::vector<double>& vTimeStamps,
              std::vector<cv::Point3f>& vAcc, std::vector<cv::Point3f>& vGyro) {
-  ifstream fImu;
+  std::ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);
   vAcc.reserve(5000);
   vGyro.reserve(5000);
 
   while (!fImu.eof()) {
-    string s;
-    getline(fImu, s);
+    std::string s;
+    std::getline(fImu, s);
     if (s[0] == '#')
       continue;
 
     if (!s.empty()) {
-      string item;
+      std::string item;
       size_t pos = 0;
       double data[7];
       int count = 0;
-      while ((pos = s.find(',')) != string::npos) {
+      while ((pos = s.find(',')) != std::string::npos) {
         item = s.substr(0, pos);
         data[count++] = stod(item);
         s.erase(0, pos + 1);
