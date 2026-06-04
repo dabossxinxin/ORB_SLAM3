@@ -112,7 +112,7 @@ public:
   Eigen::Matrix3d Rwb0;
   Eigen::Matrix3d DR;
 
-  int its;
+  int its = 0;
 };
 
 class InvDepthPoint {
@@ -128,7 +128,7 @@ public:
 
   double fx, fy, cx, cy, bf;  // from host frame
 
-  int its;
+  int its = 0;
 };
 
 // Optimizable parameters are IMU pose
@@ -250,7 +250,7 @@ public:
 
   Eigen::Matrix3d Rwg, Rgw;
 
-  int its;
+  int its = 0;
 };
 
 class VertexGDir : public g2o::BaseVertex<2, GDirection> {

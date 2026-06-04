@@ -278,7 +278,7 @@ void MapPoint::SetBadFlag() {
     mObservations.clear();
   }
   for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = obs.begin(),
-                                                 mend = obs.end();
+                                                      mend = obs.end();
        mit != mend; mit++) {
     KeyFrame* pKF = mit->first;
     int leftIndex = get<0>(mit->second), rightIndex = get<1>(mit->second);
@@ -317,7 +317,7 @@ void MapPoint::Replace(MapPoint* pMP) {
   }
 
   for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = obs.begin(),
-                                                 mend = obs.end();
+                                                      mend = obs.end();
        mit != mend; mit++) {
     // Replace measurement in keyframe
     KeyFrame* pKF = mit->first;
@@ -391,8 +391,9 @@ void MapPoint::ComputeDistinctiveDescriptors() {
 
   vDescriptors.reserve(observations.size());
 
-  for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
-                                                 mend = observations.end();
+  for (std::map<KeyFrame*, tuple<int, int>>::iterator
+           mit = observations.begin(),
+           mend = observations.end();
        mit != mend; mit++) {
     KeyFrame* pKF = mit->first;
 
@@ -582,11 +583,12 @@ int MapPoint::PredictScale(const float& currentDist, Frame* pF) {
 
 void MapPoint::PrintObservations() {
   cout << "MP_OBS: MP " << mnId << endl;
-  for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = mObservations.begin(),
-                                                 mend = mObservations.end();
+  for (std::map<KeyFrame*, tuple<int, int>>::iterator
+           mit = mObservations.begin(),
+           mend = mObservations.end();
        mit != mend; mit++) {
     KeyFrame* pKFi = mit->first;
-    tuple<int, int> indexes = mit->second;
+    std::tuple<int, int> indexes = mit->second;
     int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
     cout << "--OBS in KF " << pKFi->mnId << " in map "
          << pKFi->GetMap()->GetId() << endl;

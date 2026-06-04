@@ -671,7 +671,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
 
 
     bool bAbortByNearKF = false;
-    for (int j = 0; j < vpCovKFi.size(); ++j) {
+    for (size_t j = 0; j < vpCovKFi.size(); ++j) {
       if (spConnectedKeyFrames.find(vpCovKFi[j]) !=
           spConnectedKeyFrames.end()) {
         bAbortByNearKF = true;
@@ -701,7 +701,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
         mpCurrentKF->GetMapPointMatches().size(), static_cast<KeyFrame*>(NULL));
 
     int nIndexMostBoWMatchesKF = 0;
-    for (int j = 0; j < vpCovKFi.size(); ++j) {
+    for (size_t j = 0; j < vpCovKFi.size(); ++j) {
       if (!vpCovKFi[j] || vpCovKFi[j]->isBad())
         continue;
 
@@ -713,8 +713,8 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
       }
     }
 
-    for (int j = 0; j < vpCovKFi.size(); ++j) {
-      for (int k = 0; k < vvpMatchedMPs[j].size(); ++k) {
+    for (size_t j = 0; j < vpCovKFi.size(); ++j) {
+      for (size_t k = 0; k < vvpMatchedMPs[j].size(); ++k) {
         MapPoint* pMPi_j = vvpMatchedMPs[j][k];
         if (!pMPi_j || pMPi_j->isBad())
           continue;
@@ -875,7 +875,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
               std::vector<KeyFrame*> vpCurrentCovKFs =
                   mpCurrentKF->GetBestCovisibilityKeyFrames(nNumCovisibles);
 
-              int j = 0;
+              size_t j = 0;
               while (nNumKFs < 3 && j < vpCurrentCovKFs.size()) {
                 KeyFrame* pKFj = vpCurrentCovKFs[j];
                 Sophus::SE3d mTjc =
@@ -938,7 +938,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
   } else {
     int maxStage = -1;
     int maxMatched;
-    for (int i = 0; i < vnStage.size(); ++i) {
+    for (size_t i = 0; i < vnStage.size(); ++i) {
       if (vnStage[i] > maxStage) {
         maxStage = vnStage[i];
         maxMatched = vnMatchesStage[i];
@@ -980,7 +980,7 @@ int LoopClosing::FindMatchesByProjection(
       std::vector<KeyFrame*> vpKFs =
           vpCovKFm[i]->GetBestCovisibilityKeyFrames(nNumCovisibles);
       int nInserted = 0;
-      int j = 0;
+      size_t j = 0;
       while (j < vpKFs.size() && nInserted < nNumCovisibles) {
         if (spCheckKFs.find(vpKFs[j]) == spCheckKFs.end() &&
             spCurrentCovisbles.find(vpKFs[j]) == spCurrentCovisbles.end()) {
@@ -1097,7 +1097,7 @@ void LoopClosing::CorrectLoop() {
     const bool bImuInit = pLoopMap->isImuInitialized();
 
     for (std::vector<KeyFrame*>::iterator vit = mvpCurrentConnectedKFs.begin(),
-                                     vend = mvpCurrentConnectedKFs.end();
+                                          vend = mvpCurrentConnectedKFs.end();
          vit != vend; vit++) {
       KeyFrame* pKFi = *vit;
 
@@ -1204,21 +1204,23 @@ void LoopClosing::CorrectLoop() {
   std::map<KeyFrame*, set<KeyFrame*>> LoopConnections;
 
   for (std::vector<KeyFrame*>::iterator vit = mvpCurrentConnectedKFs.begin(),
-                                   vend = mvpCurrentConnectedKFs.end();
+                                        vend = mvpCurrentConnectedKFs.end();
        vit != vend; vit++) {
     KeyFrame* pKFi = *vit;
-    std::vector<KeyFrame*> vpPreviousNeighbors = pKFi->GetVectorCovisibleKeyFrames();
+    std::vector<KeyFrame*> vpPreviousNeighbors =
+        pKFi->GetVectorCovisibleKeyFrames();
 
     // Update connections. Detect new links.
     pKFi->UpdateConnections();
     LoopConnections[pKFi] = pKFi->GetConnectedKeyFrames();
-    for (std::vector<KeyFrame*>::iterator vit_prev = vpPreviousNeighbors.begin(),
-                                     vend_prev = vpPreviousNeighbors.end();
+    for (std::vector<KeyFrame*>::iterator
+             vit_prev = vpPreviousNeighbors.begin(),
+             vend_prev = vpPreviousNeighbors.end();
          vit_prev != vend_prev; vit_prev++) {
       LoopConnections[pKFi].erase(*vit_prev);
     }
     for (std::vector<KeyFrame*>::iterator vit2 = mvpCurrentConnectedKFs.begin(),
-                                     vend2 = mvpCurrentConnectedKFs.end();
+                                          vend2 = mvpCurrentConnectedKFs.end();
          vit2 != vend2; vit2++) {
       LoopConnections[pKFi].erase(*vit2);
     }
@@ -2241,7 +2243,7 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose& CorrectedPosesMap,
     Sophus::Sim3f Scw = Converter::toSophus(g2oScw);
 
     std::vector<MapPoint*> vpReplacePoints(vpMapPoints.size(),
-                                      static_cast<MapPoint*>(NULL));
+                                           static_cast<MapPoint*>(NULL));
     int numFused = matcher.Fuse(pKFi, Scw, vpMapPoints, 4, vpReplacePoints);
 
     // Get Map Mutex
@@ -2283,7 +2285,7 @@ void LoopClosing::SearchAndFuse(const std::vector<KeyFrame*>& vConectedKFs,
         Scw.translation() - Tcw.translation() << std::endl <<
         Scw.scale() - 1.f << std::endl;*/
     std::vector<MapPoint*> vpReplacePoints(vpMapPoints.size(),
-                                      static_cast<MapPoint*>(NULL));
+                                           static_cast<MapPoint*>(NULL));
     matcher.Fuse(pKF, Scw, vpMapPoints, 4, vpReplacePoints);
 
     // Get Map Mutex

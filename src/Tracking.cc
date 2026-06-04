@@ -2233,14 +2233,16 @@ void Tracking::StereoInitialization() {
   if (mCurrentFrame.N > 500) {
     if (mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
       if (!mCurrentFrame.mpImuPreintegrated || !mLastFrame.mpImuPreintegrated) {
-        cout << "not IMU meas" << endl;
+        Verbose::Print("Tracking", Verbose::WARN,
+                       "Have no Imu Measurements for initialization");
         return;
       }
 
       if (!mFastInit && (mCurrentFrame.mpImuPreintegratedFrame->avgA -
                          mLastFrame.mpImuPreintegratedFrame->avgA)
                                 .norm() < 0.5) {
-        cout << "not enough acceleration" << endl;
+        Verbose::Print("Tracking", Verbose::WARN,
+                       "Not enough acceleration for initialization");
         return;
       }
 

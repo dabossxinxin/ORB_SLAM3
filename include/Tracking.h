@@ -156,10 +156,11 @@ public:
   // Lists used to recover the full camera trajectory at the end of the
   // execution. Basically we store the reference keyframe for each frame and its
   // relative transformation
-  list<Sophus::SE3f> mlRelativeFramePoses;
-  list<KeyFrame*> mlpReferences;
-  list<double> mlFrameTimes;
-  list<bool> mlbLost;
+  std::list<Sophus::SE3f>
+      mlRelativeFramePoses;  // frame's poses relative to reference keyframe
+  std::list<KeyFrame*> mlpReferences;  // frame's reference keyframe
+  std::list<double> mlFrameTimes;      // time-stamp of each frame
+  std::list<bool> mlbLost;             // true if tracking failed at that frame
 
   // frames with estimated pose
   int mTrackedFr;

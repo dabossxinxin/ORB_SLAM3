@@ -2412,7 +2412,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   vpOptimizableKFs.reserve(Nd);
   vpOptimizableKFs.push_back(pKF);
   pKF->mnBALocalForKF = pKF->mnId;
-  for (int i = 1; i < Nd; i++) {
+  for (int i = 1; i < Nd; ++i) {
     if (vpOptimizableKFs.back()->mPrevKF) {
       vpOptimizableKFs.push_back(vpOptimizableKFs.back()->mPrevKF);
       vpOptimizableKFs.back()->mnBALocalForKF = pKF->mnId;
@@ -2420,11 +2420,11 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
       break;
   }
 
-  int N = vpOptimizableKFs.size();
+  size_t N = vpOptimizableKFs.size();
 
   // Optimizable points seen by temporal optimizable keyframes
   list<MapPoint*> lLocalMapPoints;
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; ++i) {
     std::vector<MapPoint*> vpMPs = vpOptimizableKFs[i]->GetMapPointMatches();
     for (std::vector<MapPoint*>::iterator vit = vpMPs.begin(),
                                           vend = vpMPs.end();
@@ -2452,8 +2452,8 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   }
 
   // Optimizable visual KFs
-  const int maxCovKF = 0;
-  for (int i = 0, iend = vpNeighsKFs.size(); i < iend; i++) {
+  const size_t maxCovKF = 0;
+  for (size_t i = 0, iend = vpNeighsKFs.size(); i < iend; i++) {
     if (lpOptVisKFs.size() >= maxCovKF)
       break;
 
@@ -2531,7 +2531,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
 
   // Set Local temporal KeyFrame vertices
   N = vpOptimizableKFs.size();
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; ++i) {
     KeyFrame* pKFi = vpOptimizableKFs[i];
 
     VertexPose* VP = new VertexPose(pKFi);
@@ -2599,7 +2599,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   std::vector<EdgeGyroRW*> vegr(N, (EdgeGyroRW*)NULL);
   std::vector<EdgeAccRW*> vear(N, (EdgeAccRW*)NULL);
 
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; ++i) {
     KeyFrame* pKFi = vpOptimizableKFs[i];
 
     if (!pKFi->mPrevKF) {
@@ -2676,7 +2676,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   }
 
   // Set MapPoint vertices
-  const int nExpectedSize =
+  const size_t nExpectedSize =
       (N + lFixedKeyFrames.size()) * lLocalMapPoints.size();
 
   // Mono
@@ -2707,7 +2707,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   const unsigned long iniMPid = maxKFid * 5;
 
   std::map<int, int> mVisEdges;
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; ++i) {
     KeyFrame* pKFi = vpOptimizableKFs[i];
     mVisEdges[pKFi->mnId] = 0;
   }
@@ -2928,7 +2928,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
   // Recover optimized data
   // Local temporal Keyframes
   N = vpOptimizableKFs.size();
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; ++i) {
     KeyFrame* pKFi = vpOptimizableKFs[i];
 
     VertexPose* VP = static_cast<VertexPose*>(optimizer.vertex(pKFi->mnId));
@@ -3220,8 +3220,7 @@ void Optimizer::InertialOptimization(Map* pMap, Eigen::Matrix3d& Rwg,
   IMU::Bias b(ba[0], ba[1], ba[2], bg[0], bg[1], bg[2]);
 
   // Keyframes velocities and biases
-  const int N = vpKFs.size();
-  for (size_t i = 0; i < N; ++i) {
+  for (size_t i = 0; i < vpKFs.size(); ++i) {
     KeyFrame* pKFi = vpKFs[i];
     if (pKFi->mnId > maxKFid) {
       continue;
@@ -3384,8 +3383,7 @@ void Optimizer::InertialOptimization(Map* pMap, Eigen::Vector3d& bg,
   IMU::Bias b(vb[3], vb[4], vb[5], vb[0], vb[1], vb[2]);
 
   // Keyframes velocities and biases
-  const int N = vpKFs.size();
-  for (size_t i = 0; i < N; i++) {
+  for (size_t i = 0; i < vpKFs.size(); ++i) {
     KeyFrame* pKFi = vpKFs[i];
     if (pKFi->mnId > maxKFid)
       continue;
@@ -3511,10 +3509,15 @@ void Optimizer::InertialOptimization(Map* pMap, Eigen::Matrix3d& Rwg,
   optimizer.setVerbose(false);
   optimizer.initializeOptimization();
   optimizer.computeActiveErrors();
-  float err = optimizer.activeRobustChi2();
+  float err_ini = optimizer.activeRobustChi2();
   optimizer.optimize(its);
   optimizer.computeActiveErrors();
   float err_end = optimizer.activeRobustChi2();
+  Verbose::Print(
+      "Optimizer", Verbose::INFO,
+      "Inertial optimization finished. Initial error: %.6f, Final error: %.6f",
+      err_ini, err_end);
+
   // Recover optimized data
   scale = VS->estimate();
   Rwg = VGDir->estimate().Rwg;
@@ -3524,8 +3527,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,
                                       std::vector<KeyFrame*> vpAdjustKF,
                                       std::vector<KeyFrame*> vpFixedKF,
                                       bool* pbStopFlag) {
-  bool bShowImages = false;
-
   std::vector<MapPoint*> vpMPs;
 
   g2o::SparseOptimizer optimizer;
@@ -4044,8 +4045,8 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
       // Using mnBALocalForKF we avoid redundance here, one MP can not be added
       // several times to lLocalMapPoints
       MapPoint* pMP = *vit;
-      if (pMP)
-        if (!pMP->isBad())
+      if (pMP) {
+        if (!pMP->isBad()) {
           if (pMP->mnBALocalForKF != pCurrKF->mnId) {
             mLocalObs[pMP] = 1;
             lLocalMapPoints.push_back(pMP);
@@ -4053,14 +4054,17 @@ void Optimizer::MergeInertialBA(KeyFrame* pCurrKF, KeyFrame* pMergeKF,
           } else {
             mLocalObs[pMP]++;
           }
+        }
+      }
     }
   }
 
   std::vector<std::pair<MapPoint*, int>> pairs;
   pairs.reserve(mLocalObs.size());
-  for (auto itr = mLocalObs.begin(); itr != mLocalObs.end(); ++itr)
-    pairs.push_back(*itr);
-  sort(pairs.begin(), pairs.end(), sortByVal);
+  for (auto itr = mLocalObs.begin(); itr != mLocalObs.end(); ++itr) {
+    pairs.emplace_back(*itr);
+  }
+  std::sort(pairs.begin(), pairs.end(), sortByVal);
 
   // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local
   // Keyframes
@@ -5353,7 +5357,6 @@ void Optimizer::OptimizeEssentialGraph4DoF(
   matLambda(0, 0) = 1e3;
 
   // Set Loop edges
-  Edge4DoF* e_loop;
   for (std::map<KeyFrame*, set<KeyFrame*>>::const_iterator
            mit = LoopConnections.begin(),
            mend = LoopConnections.end();
@@ -5385,7 +5388,6 @@ void Optimizer::OptimizeEssentialGraph4DoF(
                           optimizer.vertex(nIDi)));
 
       e->information() = matLambda;
-      e_loop = e;
       optimizer.addEdge(e);
 
       sInsertedEdges.insert(make_pair(min(nIDi, nIDj), max(nIDi, nIDj)));

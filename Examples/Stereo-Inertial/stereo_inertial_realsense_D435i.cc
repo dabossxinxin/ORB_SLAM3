@@ -271,7 +271,8 @@ int main(int argc, char** argv) {
   float* tbc = ext_left_to_imu.translation;
   std::cout << "Tbc (left) = " << std::endl;
   for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) std::cout << Rbc[i * 3 + j] << ", ";
+    for (int j = 0; j < 3; j++)
+      std::cout << Rbc[i * 3 + j] << ", ";
     std::cout << tbc[i] << "\n";
   }
 
@@ -280,7 +281,8 @@ int main(int argc, char** argv) {
   float* tlr = ext_right_to_left.translation;
   std::cout << "Tlr  = " << std::endl;
   for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) std::cout << Rlr[i * 3 + j] << ", ";
+    for (int j = 0; j < 3; j++)
+      std::cout << Rlr[i * 3 + j] << ", ";
     std::cout << tlr[i] << "\n";
   }
 
@@ -338,7 +340,8 @@ int main(int argc, char** argv) {
 
     {
       std::unique_lock<std::mutex> lk(imu_mutex);
-      if (!image_ready) cond_image_rec.wait(lk);
+      if (!image_ready)
+        cond_image_rec.wait(lk);
 
 #ifdef COMPILEDWITHC11
       std::chrono::steady_clock::time_point time_Start_Process =
@@ -348,7 +351,8 @@ int main(int argc, char** argv) {
           std::chrono::monotonic_clock::now();
 #endif
 
-      if (count_im_buffer > 1) cout << count_im_buffer - 1 << " dropped frs\n";
+      if (count_im_buffer > 1)
+        cout << count_im_buffer - 1 << " dropped frs\n";
       count_im_buffer = 0;
 
       while (v_gyro_timestamp.size() > v_accel_timestamp_sync.size()) {
@@ -382,7 +386,7 @@ int main(int argc, char** argv) {
       image_ready = false;
     }
 
-    for (int i = 0; i < vGyro.size(); ++i) {
+    for (size_t i = 0; i < vGyro.size(); ++i) {
       ORB_SLAM3::IMU::Point lastPoint(vAccel[i].x, vAccel[i].y, vAccel[i].z,
                                       vGyro[i].x, vGyro[i].y, vGyro[i].z,
                                       vGyro_times[i]);
@@ -412,10 +416,10 @@ int main(int argc, char** argv) {
       std::chrono::monotonic_clock::time_point t_End_Resize =
           std::chrono::monotonic_clock::now();
 #endif
-      t_resize = std::chrono::duration_cast<
-                     std::chrono::duration<double, std::milli> >(t_End_Resize -
-                                                                 t_Start_Resize)
-                     .count();
+      t_resize =
+          std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
+              t_End_Resize - t_Start_Resize)
+              .count();
       SLAM.InsertResizeTime(t_resize);
 #endif
     }
@@ -441,7 +445,7 @@ int main(int argc, char** argv) {
 #endif
     t_track =
         t_resize +
-        std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(
+        std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
             t_End_Track - t_Start_Track)
             .count();
     SLAM.InsertTrackTime(t_track);

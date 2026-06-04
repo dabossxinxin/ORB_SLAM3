@@ -134,8 +134,7 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO,
-                         false);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true);
 
   cv::Mat imLeft, imRight;
   for (int seq = 0; seq < num_seq; ++seq) {
@@ -218,7 +217,7 @@ int main(int argc, char** argv) {
       }
 
       if (ttrack < T) {
-        std::usleep((T - ttrack) * 1e6);  // 1e6
+        usleep((T - ttrack) * 1e6);  // 1e6
       }
     }
 
