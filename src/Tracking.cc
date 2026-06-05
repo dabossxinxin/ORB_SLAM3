@@ -1384,6 +1384,10 @@ bool Tracking::GetStepByStep() {
   return bStepByStep;
 }
 
+IMU::Calib* Tracking::GetImuCalbInfo() {
+  return mpImuCalib;
+}
+
 Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat& imRectLeft,
                                        const cv::Mat& imRectRight,
                                        const double& timestamp,

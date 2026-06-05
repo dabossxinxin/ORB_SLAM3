@@ -132,9 +132,14 @@ int main(int argc, char** argv) {
   std::cout << std::endl << "-------" << std::endl;
   std::cout.precision(17);
 
+  std::ofstream fTrajectoryOnline;
+  fTrajectoryOnline.open("CameraTrajectoryOnline.txt");
+  fTrajectoryOnline << fixed;
+
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
   ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true);
+  Sophus::SE3f Tbc = SLAM.GetTracker()->GetImuCalbInfo()->mTbc;
 
   cv::Mat imLeft, imRight;
   for (int seq = 0; seq < num_seq; ++seq) {
@@ -184,7 +189,18 @@ int main(int argc, char** argv) {
 
       // Pass the images to the SLAM system
       double tframe = vTimestampsCam[seq][ni];
-      SLAM.TrackStereo(imLeft, imRight, tframe, vImuMeas);
+      Sophus::SE3f Tcw = SLAM.TrackStereo(imLeft, imRight, tframe, vImuMeas);
+
+      if (!SLAM.isLost() &&
+          SLAM.GetAtlas()->GetCurrentMap()->GetInertialBA2()) {
+        Sophus::SE3f Twb = (Tbc * Tcw).inverse();
+        Eigen::Quaternionf q = Twb.unit_quaternion();
+        Eigen::Vector3f twb = Twb.translation();
+        fTrajectoryOnline << setprecision(6) << tframe << " " << setprecision(9)
+                          << twb(0) << " " << twb(1) << " " << twb(2) << " "
+                          << q.x() << " " << q.y() << " " << q.z() << " "
+                          << q.w() << std::endl;
+      }
 
 #ifdef COMPILEDWITHC11
       std::chrono::steady_clock::time_point t2 =
@@ -228,17 +244,19 @@ int main(int argc, char** argv) {
   }
   // Stop all threads
   SLAM.Shutdown();
+  fTrajectoryOnline.close();
 
   // Save camera trajectory
   if (bFileName) {
     const std::string kf_file =
-        "keyframe_" + std::string(argv[argc - 1]) + ".txt";
-    const std::string f_file = "frame_" + std::string(argv[argc - 1]) + ".txt";
+        "keyframe_" + std::string(argv[argc - 1]) + "_offline.txt";
+    const std::string f_file =
+        "frame_" + std::string(argv[argc - 1]) + "_offline.txt";
     SLAM.SaveTrajectoryEuRoC(f_file);
     SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
   } else {
-    SLAM.SaveTrajectoryEuRoC("CameraTrajectory.txt");
-    SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectory.txt");
+    SLAM.SaveTrajectoryEuRoC("CameraTrajectoryOffline.txt");
+    SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectoryOffline.txt");
   }
 
   return 0;

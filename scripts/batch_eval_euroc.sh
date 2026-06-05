@@ -87,13 +87,17 @@ for short_name in "${!DATASETS[@]}"; do
         2>&1 | tee "$SEQ_RESULTS/slam_output.log"
 
     # --- Save trajectory ---
-    if [ -f "CameraTrajectory.txt" ]; then
-        cp "CameraTrajectory.txt" "$SEQ_RESULTS/"
-        echo "[SAVE] CameraTrajectory.txt -> $SEQ_RESULTS/"
+    if [ -f "CameraTrajectoryOffline.txt" ]; then
+        cp "CameraTrajectoryOffline.txt" "$SEQ_RESULTS/"
+        echo "[SAVE] CameraTrajectoryOffline.txt -> $SEQ_RESULTS/"
     fi
-    if [ -f "KeyFrameTrajectory.txt" ]; then
-        cp "KeyFrameTrajectory.txt" "$SEQ_RESULTS/"
-        echo "[SAVE] KeyFrameTrajectory.txt -> $SEQ_RESULTS/"
+    if [ -f "KeyFrameTrajectoryOffline.txt" ]; then
+        cp "KeyFrameTrajectoryOffline.txt" "$SEQ_RESULTS/"
+        echo "[SAVE] KeyFrameTrajectoryOffline.txt -> $SEQ_RESULTS/"
+    fi
+    if [ -f "CameraTrajectoryOnline.txt" ]; then
+        cp "CameraTrajectoryOnline.txt" "$SEQ_RESULTS/"
+        echo "[SAVE] CameraTrajectoryOnline.txt -> $SEQ_RESULTS/"
     fi
 
     # --- Extract IMU bias from log ---
@@ -101,23 +105,35 @@ for short_name in "${!DATASETS[@]}"; do
     grep -i "scale" "$SEQ_RESULTS/slam_output.log" > "$SEQ_RESULTS/scale_log.txt" || true
 
     # --- evo evaluation ---
-    if [ "$RUN_EVO" = true ] && [ -f "CameraTrajectory.txt" ] && [ -f "$GROUNDTRUTH" ]; then
+    if [ "$RUN_EVO" = true ] && [ -f "CameraTrajectoryOffline.txt" ] && [ -f "$GROUNDTRUTH" ] && [ -f "CameraTrajectoryOnline.txt" ]; then
         echo "[EVO] Evaluating $short_name ..."
 
         # Convert groundtruth to TUM format
         evo_traj euroc "$GROUNDTRUTH" --save_as_tum
 
         # APE with SE(3) alignment #--plot --plot_mode xz \
-        MPLBACKEND=Agg evo_ape tum "CameraTrajectory.txt" "$GROUNDTRUTH_TUM" -a \
-            --save_results "$SEQ_RESULTS/${short_name}_ape.zip" \
-            --save_plot "$SEQ_RESULTS/${short_name}_ape.pdf" \
-            2>&1 | tee "$SEQ_RESULTS/eval_ape.log"
+        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOffline.txt" "$GROUNDTRUTH_TUM" -a \
+            --save_results "$SEQ_RESULTS/${short_name}_ape_offline.zip" \
+            --save_plot "$SEQ_RESULTS/${short_name}_ape_offline.pdf" \
+            2>&1 | tee "$SEQ_RESULTS/eval_ape_offline.log"
 
         # RPE (delta = 1m) #--plot --plot_mode xz \
-        MPLBACKEND=Agg evo_rpe tum "CameraTrajectory.txt" "$GROUNDTRUTH_TUM" -a --delta 1 --delta_unit m \
-            --save_results "$SEQ_RESULTS/${short_name}_rpe.zip" \
-            --save_plot "$SEQ_RESULTS/${short_name}_rpe.pdf" \
-            2>&1 | tee "$SEQ_RESULTS/eval_rpe.log"
+        MPLBACKEND=Agg evo_rpe tum "CameraTrajectoryOffline.txt" "$GROUNDTRUTH_TUM" -a --delta 1 --delta_unit m \
+            --save_results "$SEQ_RESULTS/${short_name}_rpe_offline.zip" \
+            --save_plot "$SEQ_RESULTS/${short_name}_rpe_offline.pdf" \
+            2>&1 | tee "$SEQ_RESULTS/eval_rpe_offline.log"
+
+        # APE with SE(3) alignment #--plot --plot_mode xz \
+        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOnline.txt" "$GROUNDTRUTH_TUM" -a \
+            --save_results "$SEQ_RESULTS/${short_name}_ape_online.zip" \
+            --save_plot "$SEQ_RESULTS/${short_name}_ape_online.pdf" \
+            2>&1 | tee "$SEQ_RESULTS/eval_ape_online.log"
+
+        # RPE (delta = 1m) #--plot --plot_mode xz \
+        MPLBACKEND=Agg evo_rpe tum "CameraTrajectoryOnline.txt" "$GROUNDTRUTH_TUM" -a --delta 1 --delta_unit m \
+            --save_results "$SEQ_RESULTS/${short_name}_rpe_online.zip" \
+            --save_plot "$SEQ_RESULTS/${short_name}_rpe_online.pdf" \
+            2>&1 | tee "$SEQ_RESULTS/eval_rpe_online.log"
 
         echo "[EVO] Done"
     else
@@ -125,7 +141,7 @@ for short_name in "${!DATASETS[@]}"; do
     fi
 
     # --- Clean up SLAM output files ---
-    rm -f "CameraTrajectory.txt" "KeyFrameTrajectory.txt" "$GROUNDTRUTH_TUM" 2>/dev/null
+    rm -f "CameraTrajectoryOffline.txt" "CameraTrajectoryOnline.txt" "KeyFrameTrajectoryOffline.txt" "$GROUNDTRUTH_TUM" 2>/dev/null
 
     echo "[DONE] $short_name"
 done
@@ -140,10 +156,26 @@ echo "  Total time: $(( (TOTAL_END - TOTAL_START) / 60 )) min"
 echo "========================================="
 echo ""
 
+echo "APE Results (offline):"
 echo "Dataset   |   RMSE   |   Mean   |  Median  |   Std    "
 echo "----------|----------|----------|----------|----------"
 for short_name in "${!DATASETS[@]}"; do
-    ape_log="$RESULTS_DIR/$short_name/eval_ape.log"
+    ape_log="$RESULTS_DIR/$short_name/eval_ape_offline.log"
+    if [ -f "$ape_log" ]; then
+        rmse=$(awk '/^ *rmse/{print $2}' "$ape_log")
+        mean=$(awk '/^ *mean/{print $2}' "$ape_log")
+        median=$(awk '/^ *median/{print $2}' "$ape_log")
+        std=$(awk '/^ *std/{print $2}' "$ape_log")
+        printf "%-10s| %-9s| %-9s| %-9s| %-9s\n" "$short_name" "$rmse" "$mean" "$median" "$std"
+    fi
+done
+echo ""
+
+echo "APE Results (online):"
+echo "Dataset   |   RMSE   |   Mean   |  Median  |   Std    "
+echo "----------|----------|----------|----------|----------"
+for short_name in "${!DATASETS[@]}"; do
+    ape_log="$RESULTS_DIR/$short_name/eval_ape_online.log"
     if [ -f "$ape_log" ]; then
         rmse=$(awk '/^ *rmse/{print $2}' "$ape_log")
         mean=$(awk '/^ *mean/{print $2}' "$ape_log")

@@ -85,6 +85,7 @@ public:
   void SetViewer(Viewer* pViewer);
   void SetStepByStep(bool bSet);
   bool GetStepByStep();
+  IMU::Calib* GetImuCalbInfo();
 
   // Load new settings
   // The focal lenght should be similar or scale prediction will fail when

@@ -248,6 +248,7 @@ public:
   float GetImageScale();
 
   Atlas* GetAtlas() { return mpAtlas; }
+  Tracking* GetTracker() { return mpTracker; }
 
 #ifdef REGISTER_TIMES
   void InsertRectTime(double& time);
