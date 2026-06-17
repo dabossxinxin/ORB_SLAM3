@@ -990,8 +990,9 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
     }
   }
 
-  if (nInitialCorrespondences < 3)
+  if (nInitialCorrespondences < 3) {
     return 0;
+  }
 
   // We perform 4 optimizations, after each optimization we classify observation
   // as inlier/outlier At the next optimization, outliers are not included, but
@@ -1011,15 +1012,12 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
     nBad = 0;
     for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; i++) {
       ORB_SLAM3::EdgeSE3ProjectXYZOnlyPose* e = vpEdgesMono[i];
-
       const size_t idx = vnIndexEdgeMono[i];
-
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
 
       const float chi2 = e->chi2();
-
       if (chi2 > chi2Mono[it]) {
         pFrame->mvbOutlier[idx] = true;
         e->setLevel(1);
@@ -1029,21 +1027,19 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
         e->setLevel(0);
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
     for (size_t i = 0, iend = vpEdgesMono_FHR.size(); i < iend; i++) {
       ORB_SLAM3::EdgeSE3ProjectXYZOnlyPoseToBody* e = vpEdgesMono_FHR[i];
-
       const size_t idx = vnIndexEdgeRight[i];
-
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
 
       const float chi2 = e->chi2();
-
       if (chi2 > chi2Mono[it]) {
         pFrame->mvbOutlier[idx] = true;
         e->setLevel(1);
@@ -1053,21 +1049,19 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
         e->setLevel(0);
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
     for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; i++) {
       g2o::EdgeStereoSE3ProjectXYZOnlyPose* e = vpEdgesStereo[i];
-
       const size_t idx = vnIndexEdgeStereo[i];
-
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
 
       const float chi2 = e->chi2();
-
       if (chi2 > chi2Stereo[it]) {
         pFrame->mvbOutlier[idx] = true;
         e->setLevel(1);
@@ -1077,12 +1071,14 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
         pFrame->mvbOutlier[idx] = false;
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
-    if (optimizer.edges().size() < 10)
+    if (optimizer.edges().size() < 10) {
       break;
+    }
   }
 
   // Recover optimized pose and return number of inliers
@@ -4745,13 +4741,11 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
     // For monocular observations
     for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; i++) {
       EdgeMonoOnlyPose* e = vpEdgesMono[i];
-
       const size_t idx = vnIndexEdgeMono[i];
 
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
-
       const float chi2 = e->chi2();
       bool bClose = pFrame->mvpMapPoints[idx]->mTrackDepth < 10.f;
 
@@ -4766,20 +4760,19 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
         nInliersMono++;
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
     // For stereo observations
     for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; i++) {
       EdgeStereoOnlyPose* e = vpEdgesStereo[i];
-
       const size_t idx = vnIndexEdgeStereo[i];
 
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
-
       const float chi2 = e->chi2();
 
       if (chi2 > chi2Stereo[it]) {
@@ -4792,8 +4785,9 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
         nInliersStereo++;
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
     nInliers = nInliersMono + nInliersStereo;
@@ -4815,19 +4809,21 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
       const size_t idx = vnIndexEdgeMono[i];
       e1 = vpEdgesMono[i];
       e1->computeError();
-      if (e1->chi2() < chi2MonoOut)
+      if (e1->chi2() < chi2MonoOut) {
         pFrame->mvbOutlier[idx] = false;
-      else
+      } else {
         nBad++;
+      }
     }
     for (size_t i = 0, iend = vnIndexEdgeStereo.size(); i < iend; i++) {
       const size_t idx = vnIndexEdgeStereo[i];
       e2 = vpEdgesStereo[i];
       e2->computeError();
-      if (e2->chi2() < chi2StereoOut)
+      if (e2->chi2() < chi2StereoOut) {
         pFrame->mvbOutlier[idx] = false;
-      else
+      } else {
         nBad++;
+      }
     }
   }
 
@@ -4851,26 +4847,26 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
   int tot_in = 0, tot_out = 0;
   for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; i++) {
     EdgeMonoOnlyPose* e = vpEdgesMono[i];
-
     const size_t idx = vnIndexEdgeMono[i];
 
     if (!pFrame->mvbOutlier[idx]) {
       H.block<6, 6>(0, 0) += e->GetHessian();
       tot_in++;
-    } else
+    } else {
       tot_out++;
+    }
   }
 
   for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; i++) {
     EdgeStereoOnlyPose* e = vpEdgesStereo[i];
-
     const size_t idx = vnIndexEdgeStereo[i];
 
     if (!pFrame->mvbOutlier[idx]) {
       H.block<6, 6>(0, 0) += e->GetHessian();
       tot_in++;
-    } else
+    } else {
       tot_out++;
+    }
   }
 
   pFrame->mpCPI =
@@ -5131,12 +5127,13 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
     for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; ++i) {
       EdgeMonoOnlyPose* e = vpEdgesMono[i];
       const size_t idx = vnIndexEdgeMono[i];
+
       bool bClose = pFrame->mvpMapPoints[idx]->mTrackDepth < 10.f;
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
-
       const float chi2 = e->chi2();
+
       if ((chi2 > chi2Mono[it] && !bClose) || (bClose && chi2 > chi2close) ||
           !e->isDepthPositive()) {
         pFrame->mvbOutlier[idx] = true;
@@ -5156,11 +5153,12 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
     for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; ++i) {
       EdgeStereoOnlyPose* e = vpEdgesStereo[i];
       const size_t idx = vnIndexEdgeStereo[i];
+
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
-
       const float chi2 = e->chi2();
+
       if (chi2 > chi2Stereo[it]) {
         pFrame->mvbOutlier[idx] = true;
         e->setLevel(1);

@@ -417,10 +417,10 @@ int ORBmatcher::SearchByProjection(KeyFrame* pKF, Sophus::Sim3f& Scw,
                                    std::vector<MapPoint*>& vpMatched, int th,
                                    float ratioHamming) {
   // Get Calibration Parameters for later projection
-  const float& fx = pKF->fx;
-  const float& fy = pKF->fy;
-  const float& cx = pKF->cx;
-  const float& cy = pKF->cy;
+  // const float& fx = pKF->fx;
+  // const float& fy = pKF->fy;
+  // const float& cx = pKF->cx;
+  // const float& cy = pKF->cy;
 
   Sophus::SE3f Tcw =
       Sophus::SE3f(Scw.rotationMatrix(), Scw.translation() / Scw.scale());

@@ -1176,8 +1176,11 @@ bool Tracking::ParseCamParamFile(cv::FileStorage& fSettings) {
 
 bool Tracking::ParseORBParamFile(cv::FileStorage& fSettings) {
   bool b_miss_params = false;
-  int nFeatures, nLevels, fIniThFAST, fMinThFAST;
-  float fScaleFactor;
+  int nFeatures = -1;
+  int nLevels = -1;
+  int fIniThFAST = -1;
+  int fMinThFAST = -1;
+  float fScaleFactor = -1.0f;
 
   cv::FileNode node = fSettings["ORBextractor.nFeatures"];
   if (!node.empty() && node.isInt()) {

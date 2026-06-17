@@ -1223,7 +1223,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
   // Compute and KF velocities mRwg estimation
   if (!mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
-    Eigen::Matrix3f Rwg = Eigen::Matrix3f::Identity();
+    // Eigen::Matrix3f Rwg = Eigen::Matrix3f::Identity();
     Eigen::Vector3f dirG = Eigen::Vector3f::Zero();
 
     // Compute Initialize velocity and gravity
