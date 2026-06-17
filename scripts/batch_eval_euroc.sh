@@ -25,17 +25,17 @@ mkdir -p "$RESULTS_DIR"
 
 # Map dataset short name -> folder / timestamp file
 declare -A DATASETS=(
-    ["MH01"]="euroc-mh-01-easy:MH01"
-    ["MH02"]="euroc-mh-02-easy:MH02"
-    ["MH03"]="euroc-mh-03-medium:MH03"
-    ["MH04"]="euroc-mh-04-difficult:MH04"
-    ["MH05"]="euroc-mh-05-difficult:MH05"
-    ["V101"]="euroc-v1-01-easy:V101"
-    ["V102"]="euroc-v1-02-medium:V102"
-    ["V103"]="euroc-v1-03-difficult:V103"
-    ["V201"]="euroc-v2-01-easy:V201"
+    #["MH01"]="euroc-mh-01-easy:MH01"
+    #["MH02"]="euroc-mh-02-easy:MH02"
+    #["MH03"]="euroc-mh-03-medium:MH03"
+    #["MH04"]="euroc-mh-04-difficult:MH04"
+    #["MH05"]="euroc-mh-05-difficult:MH05"
+    #["V101"]="euroc-v1-01-easy:V101"
+    #["V102"]="euroc-v1-02-medium:V102"
+    #["V103"]="euroc-v1-03-difficult:V103"
+    #["V201"]="euroc-v2-01-easy:V201"
     ["V202"]="euroc-v2-02-medium:V202"
-    ["V203"]="euroc-v2-03-difficult:V203"
+    #["V203"]="euroc-v2-03-difficult:V203"
 )
 
 # Check prerequisites
@@ -112,7 +112,7 @@ for short_name in "${!DATASETS[@]}"; do
         evo_traj euroc "$GROUNDTRUTH" --save_as_tum
 
         # APE with SE(3) alignment #--plot --plot_mode xz \
-        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOffline.txt" "$GROUNDTRUTH_TUM" -a \
+        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOffline.txt" "$GROUNDTRUTH_TUM" -a --t_max_diff 0.05\
             --save_results "$SEQ_RESULTS/${short_name}_ape_offline.zip" \
             --save_plot "$SEQ_RESULTS/${short_name}_ape_offline.pdf" \
             2>&1 | tee "$SEQ_RESULTS/eval_ape_offline.log"
@@ -124,7 +124,7 @@ for short_name in "${!DATASETS[@]}"; do
             2>&1 | tee "$SEQ_RESULTS/eval_rpe_offline.log"
 
         # APE with SE(3) alignment #--plot --plot_mode xz \
-        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOnline.txt" "$GROUNDTRUTH_TUM" -a \
+        MPLBACKEND=Agg evo_ape tum "CameraTrajectoryOnline.txt" "$GROUNDTRUTH_TUM" -a --t_max_diff 0.05\
             --save_results "$SEQ_RESULTS/${short_name}_ape_online.zip" \
             --save_plot "$SEQ_RESULTS/${short_name}_ape_online.pdf" \
             2>&1 | tee "$SEQ_RESULTS/eval_ape_online.log"

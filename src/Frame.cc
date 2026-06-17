@@ -46,7 +46,7 @@ float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 cv::BFMatcher Frame::BFmatcher = cv::BFMatcher(cv::NORM_HAMMING);
 
 Frame::Frame()
-    : mpcpi(NULL)
+    : mpCPI(NULL)
     , mpImuPreintegrated(NULL)
     , mpPrevFrame(NULL)
     , mpImuPreintegratedFrame(NULL)
@@ -64,7 +64,7 @@ Frame::Frame()
 
 // Copy Constructor
 Frame::Frame(const Frame& frame)
-    : mpcpi(frame.mpcpi)
+    : mpCPI(frame.mpCPI)
     , mpORBvocabulary(frame.mpORBvocabulary)
     , mpORBextractorLeft(frame.mpORBextractorLeft)
     , mpORBextractorRight(frame.mpORBextractorRight)
@@ -155,7 +155,7 @@ Frame::Frame(const cv::Mat& imLeft, const cv::Mat& imRight,
              cv::Mat& distCoef, const float& bf, const float& thDepth,
              GeometricCamera* pCamera, Frame* pPrevF,
              const IMU::Calib& ImuCalib)
-    : mpcpi(NULL)
+    : mpCPI(NULL)
     , mpORBvocabulary(voc)
     , mpORBextractorLeft(extractorLeft)
     , mpORBextractorRight(extractorRight)
@@ -283,7 +283,7 @@ Frame::Frame(const cv::Mat& imGray, const cv::Mat& imDepth,
              ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
              const float& thDepth, GeometricCamera* pCamera, Frame* pPrevF,
              const IMU::Calib& ImuCalib)
-    : mpcpi(NULL)
+    : mpCPI(NULL)
     , mpORBvocabulary(voc)
     , mpORBextractorLeft(extractor)
     , mpORBextractorRight(static_cast<ORBextractor*>(NULL))
@@ -397,7 +397,7 @@ Frame::Frame(const cv::Mat& imGray, const double& timeStamp,
              ORBextractor* extractor, ORBVocabulary* voc,
              GeometricCamera* pCamera, cv::Mat& distCoef, const float& bf,
              const float& thDepth, Frame* pPrevF, const IMU::Calib& ImuCalib)
-    : mpcpi(NULL)
+    : mpCPI(NULL)
     , mpORBvocabulary(voc)
     , mpORBextractorLeft(extractor)
     , mpORBextractorRight(static_cast<ORBextractor*>(NULL))
@@ -1143,7 +1143,7 @@ Frame::Frame(const cv::Mat& imLeft, const cv::Mat& imRight,
              cv::Mat& distCoef, const float& bf, const float& thDepth,
              GeometricCamera* pCamera, GeometricCamera* pCamera2,
              Sophus::SE3f& Tlr, Frame* pPrevF, const IMU::Calib& ImuCalib)
-    : mpcpi(NULL)
+    : mpCPI(NULL)
     , mpORBvocabulary(voc)
     , mpORBextractorLeft(extractorLeft)
     , mpORBextractorRight(extractorRight)

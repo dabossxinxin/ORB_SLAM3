@@ -687,12 +687,15 @@ public:
       , bg(bg_)
       , ba(ba_)
       , H(H_) {
-    H = (H + H) / 2;
+    H = (H + H) * 0.5;  // make sure H is symmetric
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 15, 15>> es(H);
     Eigen::Matrix<double, 15, 1> eigs = es.eigenvalues();
-    for (int i = 0; i < 15; i++)
-      if (eigs[i] < 1e-12)
+    for (int i = 0; i < 15; ++i) {
+      if (eigs[i] < 1e-12) {
         eigs[i] = 0;
+      }
+    }
+
     H = es.eigenvectors() * eigs.asDiagonal() * es.eigenvectors().transpose();
   }
 

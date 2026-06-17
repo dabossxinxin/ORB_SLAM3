@@ -121,9 +121,9 @@ public:
   bool PosInGrid(const cv::KeyPoint& kp, int& posX, int& posY);
 
   std::vector<size_t> GetFeaturesInArea(const float& x, const float& y,
-                                   const float& r, const int minLevel = -1,
-                                   const int maxLevel = -1,
-                                   const bool bRight = false) const;
+                                        const float& r, const int minLevel = -1,
+                                        const int maxLevel = -1,
+                                        const bool bRight = false) const;
 
   // Search a match for each keypoint in the left image to a keypoint in the
   // right image. If there is a match, depth is computed and the right
@@ -138,7 +138,7 @@ public:
   // coordinates.
   bool UnprojectStereo(const int& i, Eigen::Vector3f& x3D);
 
-  ConstraintPoseImu* mpcpi;
+  ConstraintPoseImu* mpCPI;
 
   bool imuIsPreintegrated();
   void setIntegrated();

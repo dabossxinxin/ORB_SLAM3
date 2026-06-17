@@ -231,7 +231,7 @@ void Optimizer::BundleAdjustment(const std::vector<KeyFrame*>& vpKFs,
       if (pKF->mpCamera2) {
         int rightIndex = get<1>(mit->second);
 
-        if (rightIndex != -1 && rightIndex < pKF->mvKeysRight.size()) {
+        if (rightIndex != -1 && rightIndex < (int)(pKF->mvKeysRight.size())) {
           rightIndex -= pKF->NLeft;
 
           Eigen::Matrix<double, 2, 1> obs;
@@ -401,7 +401,7 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
   int nNonFixed = 0;
 
   // Set KeyFrame vertices
-  KeyFrame* pIncKF;
+  KeyFrame* pIncKF = nullptr;
   for (size_t i = 0; i < vpKFs.size(); ++i) {
     KeyFrame* pKFi = vpKFs[i];
     if (pKFi->mnId > maxKFid) {
@@ -477,10 +477,10 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
         g2o::HyperGraph::Vertex* VV1 =
             optimizer.vertex(maxKFid + 3 * (pKFi->mPrevKF->mnId) + 1);
 
-        g2o::HyperGraph::Vertex* VG1;
-        g2o::HyperGraph::Vertex* VA1;
-        g2o::HyperGraph::Vertex* VG2;
-        g2o::HyperGraph::Vertex* VA2;
+        g2o::HyperGraph::Vertex* VG1 = nullptr;
+        g2o::HyperGraph::Vertex* VA1 = nullptr;
+        g2o::HyperGraph::Vertex* VG2 = nullptr;
+        g2o::HyperGraph::Vertex* VA2 = nullptr;
         if (!bInit) {
           VG1 = optimizer.vertex(maxKFid + 3 * (pKFi->mPrevKF->mnId) + 2);
           VA1 = optimizer.vertex(maxKFid + 3 * (pKFi->mPrevKF->mnId) + 3);
@@ -676,7 +676,8 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
         if (pKFi->mpCamera2) {  // Monocular right observation
           int rightIndex = get<1>(mit->second);
 
-          if (rightIndex != -1 && rightIndex < pKFi->mvKeysRight.size()) {
+          if (rightIndex != -1 &&
+              rightIndex < (int)(pKFi->mvKeysRight.size())) {
             rightIndex -= pKFi->NLeft;
 
             Eigen::Matrix<double, 2, 1> obs;
@@ -2506,7 +2507,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
       break;
   }
 
-  bool bNonFixed = (lFixedKeyFrames.size() == 0);
+  // bool bNonFixed = (lFixedKeyFrames.size() == 0);
 
   // Setup optimizer
   g2o::SparseOptimizer optimizer;
@@ -3019,10 +3020,11 @@ Eigen::MatrixXd Optimizer::Marginalize(const Eigen::MatrixXd& H,
   Eigen::JacobiSVD<Eigen::MatrixXd>::SingularValuesType singularValues_inv =
       svd.singularValues();
   for (int i = 0; i < b; ++i) {
-    if (singularValues_inv(i) > 1e-6)
+    if (singularValues_inv(i) > 1e-6) {
       singularValues_inv(i) = 1.0 / singularValues_inv(i);
-    else
+    } else {
       singularValues_inv(i) = 0;
+    }
   }
   Eigen::MatrixXd invHb = svd.matrixV() * singularValues_inv.asDiagonal() *
                           svd.matrixU().transpose();
@@ -4871,7 +4873,7 @@ int Optimizer::PoseInertialOptimizationLastKeyFrame(Frame* pFrame,
       tot_out++;
   }
 
-  pFrame->mpcpi =
+  pFrame->mpCPI =
       new ConstraintPoseImu(VP->estimate().Rwb, VP->estimate().twb,
                             VV->estimate(), VG->estimate(), VA->estimate(), H);
 
@@ -4934,16 +4936,18 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
   {
     std::unique_lock<mutex> lock(MapPoint::mGlobalMutex);
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; ++i) {
       MapPoint* pMP = pFrame->mvpMapPoints[i];
       if (pMP) {
         cv::KeyPoint kpUn;
         // Left monocular observation
         if ((!bRight && pFrame->mvuRight[i] < 0) || i < Nleft) {
-          if (i < Nleft)  // pair left-right
+          // pair left-right
+          if (i < Nleft) {
             kpUn = pFrame->mvKeys[i];
-          else
+          } else {
             kpUn = pFrame->mvKeysUn[i];
+          }
 
           nInitialMonoCorrespondences++;
           pFrame->mvbOutlier[i] = false;
@@ -4958,7 +4962,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
 
           // Add here uncerteinty
           const float unc2 = pFrame->mpCamera->uncertainty2(obs);
-
           const float invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave] / unc2;
           e->setInformation(Eigen::Matrix2d::Identity() * invSigma2);
 
@@ -4988,7 +4991,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
 
           // Add here uncerteinty
           const float unc2 = pFrame->mpCamera->uncertainty2(obs.head(2));
-
           const float& invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave] / unc2;
           e->setInformation(Eigen::Matrix3d::Identity() * invSigma2);
 
@@ -5018,7 +5020,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
 
           // Add here uncerteinty
           const float unc2 = pFrame->mpCamera->uncertainty2(obs);
-
           const float invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave] / unc2;
           e->setInformation(Eigen::Matrix2d::Identity() * invSigma2);
 
@@ -5085,12 +5086,13 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
   ear->setInformation(InfoA);
   optimizer.addEdge(ear);
 
-  if (!pFp->mpcpi)
-    Verbose::Print(
-        "Optimizer", Verbose::INFO,
-        "pFp->mpcpi does not exist!!!\nPrevious Frame " + to_string(pFp->mnId));
+  if (!pFp->mpCPI) {
+    Verbose::Print("Optimizer", Verbose::WARN,
+                   "pFp->mpCPI does not exist, Previous Frame Id: %lu",
+                   pFp->mnId);
+  }
 
-  EdgePriorPoseImu* ep = new EdgePriorPoseImu(pFp->mpcpi);
+  EdgePriorPoseImu* ep = new EdgePriorPoseImu(pFp->mpCPI);
 
   ep->setVertex(0, VPk);
   ep->setVertex(1, VVk);
@@ -5114,7 +5116,7 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
   int nInliersMono = 0;
   int nInliersStereo = 0;
   int nInliers = 0;
-  for (size_t it = 0; it < 4; it++) {
+  for (size_t it = 0; it < 4; ++it) {
     optimizer.initializeOptimization(0);
     optimizer.optimize(its[it]);
 
@@ -5126,18 +5128,15 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
     nInliersStereo = 0;
     float chi2close = 1.5 * chi2Mono[it];
 
-    for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; i++) {
+    for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; ++i) {
       EdgeMonoOnlyPose* e = vpEdgesMono[i];
-
       const size_t idx = vnIndexEdgeMono[i];
       bool bClose = pFrame->mvpMapPoints[idx]->mTrackDepth < 10.f;
-
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
 
       const float chi2 = e->chi2();
-
       if ((chi2 > chi2Mono[it] && !bClose) || (bClose && chi2 > chi2close) ||
           !e->isDepthPositive()) {
         pFrame->mvbOutlier[idx] = true;
@@ -5149,21 +5148,19 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
         nInliersMono++;
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
-    for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; i++) {
+    for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; ++i) {
       EdgeStereoOnlyPose* e = vpEdgesStereo[i];
-
       const size_t idx = vnIndexEdgeStereo[i];
-
       if (pFrame->mvbOutlier[idx]) {
         e->computeError();
       }
 
       const float chi2 = e->chi2();
-
       if (chi2 > chi2Stereo[it]) {
         pFrame->mvbOutlier[idx] = true;
         e->setLevel(1);
@@ -5174,8 +5171,9 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
         nInliersStereo++;
       }
 
-      if (it == 2)
+      if (it == 2) {
         e->setRobustKernel(0);
+      }
     }
 
     nInliers = nInliersMono + nInliersStereo;
@@ -5190,25 +5188,27 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
     nBad = 0;
     const float chi2MonoOut = 18.f;
     const float chi2StereoOut = 24.f;
-    EdgeMonoOnlyPose* e1;
-    EdgeStereoOnlyPose* e2;
-    for (size_t i = 0, iend = vnIndexEdgeMono.size(); i < iend; i++) {
+    EdgeMonoOnlyPose* e1 = NULL;
+    EdgeStereoOnlyPose* e2 = NULL;
+    for (size_t i = 0, iend = vnIndexEdgeMono.size(); i < iend; ++i) {
       const size_t idx = vnIndexEdgeMono[i];
       e1 = vpEdgesMono[i];
       e1->computeError();
-      if (e1->chi2() < chi2MonoOut)
+      if (e1->chi2() < chi2MonoOut) {
         pFrame->mvbOutlier[idx] = false;
-      else
+      } else {
         nBad++;
+      }
     }
-    for (size_t i = 0, iend = vnIndexEdgeStereo.size(); i < iend; i++) {
+    for (size_t i = 0, iend = vnIndexEdgeStereo.size(); i < iend; ++i) {
       const size_t idx = vnIndexEdgeStereo[i];
       e2 = vpEdgesStereo[i];
       e2->computeError();
-      if (e2->chi2() < chi2StereoOut)
+      if (e2->chi2() < chi2StereoOut) {
         pFrame->mvbOutlier[idx] = false;
-      else
+      } else {
         nBad++;
+      }
     }
   }
 
@@ -5224,8 +5224,7 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
 
   // Recover Hessian, marginalize previous frame states and generate new prior
   // for frame
-  Eigen::Matrix<double, 30, 30> H;
-  H.setZero();
+  Eigen::Matrix<double, 30, 30> H = Eigen::Matrix<double, 30, 30>::Zero();
 
   H.block<24, 24>(0, 0) += ei->GetHessian();
 
@@ -5244,37 +5243,38 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame* pFrame, bool bRecInit) {
   H.block<15, 15>(0, 0) += ep->GetHessian();
 
   int tot_in = 0, tot_out = 0;
-  for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; i++) {
+  for (size_t i = 0, iend = vpEdgesMono.size(); i < iend; ++i) {
     EdgeMonoOnlyPose* e = vpEdgesMono[i];
-
     const size_t idx = vnIndexEdgeMono[i];
 
     if (!pFrame->mvbOutlier[idx]) {
       H.block<6, 6>(15, 15) += e->GetHessian();
       tot_in++;
-    } else
+    } else {
       tot_out++;
+    }
   }
 
-  for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; i++) {
+  for (size_t i = 0, iend = vpEdgesStereo.size(); i < iend; ++i) {
     EdgeStereoOnlyPose* e = vpEdgesStereo[i];
-
     const size_t idx = vnIndexEdgeStereo[i];
 
     if (!pFrame->mvbOutlier[idx]) {
       H.block<6, 6>(15, 15) += e->GetHessian();
       tot_in++;
-    } else
+    } else {
       tot_out++;
+    }
   }
 
   H = Marginalize(H, 0, 14);
-
-  pFrame->mpcpi = new ConstraintPoseImu(
+  pFrame->mpCPI = new ConstraintPoseImu(
       VP->estimate().Rwb, VP->estimate().twb, VV->estimate(), VG->estimate(),
       VA->estimate(), H.block<15, 15>(15, 15));
-  delete pFp->mpcpi;
-  pFp->mpcpi = NULL;
+  if (pFp->mpCPI) {
+    delete pFp->mpCPI;
+    pFp->mpCPI = NULL;
+  }
 
   return nInitialCorrespondences - nBad;
 }
@@ -5284,8 +5284,6 @@ void Optimizer::OptimizeEssentialGraph4DoF(
     const LoopClosing::KeyFrameAndPose& NonCorrectedSim3,
     const LoopClosing::KeyFrameAndPose& CorrectedSim3,
     const std::map<KeyFrame*, set<KeyFrame*>>& LoopConnections) {
-  typedef g2o::BlockSolver<g2o::BlockSolverTraits<4, 4>> BlockSolver_4_4;
-
   // Setup optimizer
   g2o::SparseOptimizer optimizer;
   optimizer.setVerbose(false);
@@ -5312,7 +5310,7 @@ void Optimizer::OptimizeEssentialGraph4DoF(
 
   const int minFeat = 100;
   // Set KeyFrame vertices
-  for (size_t i = 0, iend = vpKFs.size(); i < iend; i++) {
+  for (size_t i = 0, iend = vpKFs.size(); i < iend; ++i) {
     KeyFrame* pKF = vpKFs[i];
     if (pKF->isBad())
       continue;

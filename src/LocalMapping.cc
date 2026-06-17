@@ -251,24 +251,24 @@ void LocalMapping::Run() {
               mpTracker->mState == Tracking::OK) {
             if (!mpCurrentKeyFrame->GetMap()->GetInertialBA1()) {
               if (mTinit > 5.0f) {
-                mpCurrentKeyFrame->GetMap()->SetInertialBA1();
                 if (mbMonocular) {
                   InitializeIMU(1.f, 1e5, true);
                 } else {
                   InitializeIMU(1.f, 1e5, true);
                 }
+                mpCurrentKeyFrame->GetMap()->SetInertialBA1();
                 Verbose::Print("LocalMapping", Verbose::INFO,
                                "Finished VIBA Step1, State: %d",
                                mpCurrentKeyFrame->GetMap()->GetInertialBA1());
               }
             } else if (!mpCurrentKeyFrame->GetMap()->GetInertialBA2()) {
               if (mTinit > 15.0f) {
-                mpCurrentKeyFrame->GetMap()->SetInertialBA2();
                 if (mbMonocular) {
                   InitializeIMU(0.f, 0.f, true);
                 } else {
                   InitializeIMU(0.f, 0.f, true);
                 }
+                mpCurrentKeyFrame->GetMap()->SetInertialBA2();
                 Verbose::Print("LocalMapping", Verbose::INFO,
                                "Finished VIBA Step2, State: %d",
                                mpCurrentKeyFrame->GetMap()->GetInertialBA2());
@@ -283,8 +283,9 @@ void LocalMapping::Run() {
                  (mTinit > 55.0f && mTinit < 55.5f) ||
                  (mTinit > 65.0f && mTinit < 65.5f) ||
                  (mTinit > 75.0f && mTinit < 75.5f))) {
-              if (mbMonocular)
+              if (mbMonocular) {
                 ScaleRefinement();
+              }
             }
           }
         }
