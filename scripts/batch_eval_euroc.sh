@@ -101,8 +101,20 @@ for short_name in "${!DATASETS[@]}"; do
     fi
 
     # --- Extract IMU bias from log ---
-    grep -i "bias" "$SEQ_RESULTS/slam_output.log" > "$SEQ_RESULTS/bias_log.txt" || true
+    grep "gyro bias:" "$SEQ_RESULTS/slam_output.log" > "$SEQ_RESULTS/bias_log.txt" || true
     grep -i "scale" "$SEQ_RESULTS/slam_output.log" > "$SEQ_RESULTS/scale_log.txt" || true
+
+    # --- Compare estimated bias with groundtruth ---
+    BIAS_CMP_SCRIPT="$PROJ_DIR/scripts/compare_bias.py"
+    if [ -f "$BIAS_CMP_SCRIPT" ] && [ -s "$SEQ_RESULTS/bias_log.txt" ] && [ -f "$GROUNDTRUTH" ]; then
+        echo "[BIAS] Comparing IMU bias estimates with groundtruth..."
+        python3 "$BIAS_CMP_SCRIPT" "$GROUNDTRUTH" "$SEQ_RESULTS/bias_log.txt" \
+            -o "$SEQ_RESULTS/bias_comparison.csv" \
+            -p "$SEQ_RESULTS/bias_comparison.pdf" \
+            2>&1 | tee "$SEQ_RESULTS/bias_comparison.log"
+    else
+        echo "[SKIP] Bias comparison (missing script, bias log, or groundtruth)"
+    fi
 
     # --- evo evaluation ---
     if [ "$RUN_EVO" = true ] && [ -f "CameraTrajectoryOffline.txt" ] && [ -f "$GROUNDTRUTH" ] && [ -f "CameraTrajectoryOnline.txt" ]; then

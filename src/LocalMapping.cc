@@ -34,7 +34,13 @@ namespace ORB_SLAM3 {
 
 LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, bool bMonocular,
                            bool bInertial, const string& _strSeqName)
-    : mpSystem(pSys)
+    : mScale(1.0)
+    , mIdxInit(0)
+    , mInitSect(0)
+    , mIdxIteration(0)
+    , mbNotBA1(true)
+    , mbNotBA2(true)
+    , mpSystem(pSys)
     , mbMonocular(bMonocular)
     , mbInertial(bInertial)
     , mbResetRequested(false)
@@ -42,18 +48,12 @@ LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, bool bMonocular,
     , mbFinishRequested(false)
     , mbFinished(true)
     , mpAtlas(pAtlas)
-    , bInitializing(false)
     , mbAbortBA(false)
     , mbStopped(false)
     , mbStopRequested(false)
     , mbNotStop(false)
     , mbAcceptKeyFrames(true)
-    , mIdxInit(0)
-    , mScale(1.0)
-    , mInitSect(0)
-    , mbNotBA1(true)
-    , mbNotBA2(true)
-    , mIdxIteration(0)
+    , mbInitializing(false)
     , infoInertial(Eigen::MatrixXd::Zero(9, 9)) {
   mnMatchesInliers = 0;
 
@@ -219,7 +219,6 @@ void LocalMapping::Run() {
           vnLBA_KFfixed.push_back(num_FixedKF_BA);
           vnLBA_MPs.push_back(num_MPs_BA);
         }
-
 #endif
 
         // Initialize IMU here
@@ -454,8 +453,8 @@ void LocalMapping::CreateNewMapPoints() {
   const float& fy1 = mpCurrentKeyFrame->fy;
   const float& cx1 = mpCurrentKeyFrame->cx;
   const float& cy1 = mpCurrentKeyFrame->cy;
-  const float& invfx1 = mpCurrentKeyFrame->invfx;
-  const float& invfy1 = mpCurrentKeyFrame->invfy;
+  // const float& invfx1 = mpCurrentKeyFrame->invfx;
+  // const float& invfy1 = mpCurrentKeyFrame->invfy;
 
   const float ratioFactor = 1.5f * mpCurrentKeyFrame->mfScaleFactor;
   int countStereo = 0;
@@ -506,8 +505,8 @@ void LocalMapping::CreateNewMapPoints() {
     const float& fy2 = pKF2->fy;
     const float& cx2 = pKF2->cx;
     const float& cy2 = pKF2->cy;
-    const float& invfx2 = pKF2->invfx;
-    const float& invfy2 = pKF2->invfy;
+    // const float& invfx2 = pKF2->invfx;
+    // const float& invfy2 = pKF2->invfy;
 
     // Triangulate each match
     const int nmatches = vMatchedIndices.size();
@@ -979,7 +978,7 @@ void LocalMapping::KeyFrameCulling() {
           nMPs++;
           if (pMP->Observations() > thObs) {
             const int& scaleLevel = (pKF->NLeft == -1) ? pKF->mvKeysUn[i].octave
-                                    : (i < pKF->NLeft)
+                                    : ((int)(i) < pKF->NLeft)
                                         ? pKF->mvKeys[i].octave
                                         : pKF->mvKeysRight[i].octave;
             const std::map<KeyFrame*, tuple<int, int>> observations =
@@ -1177,7 +1176,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     return;
   }
 
-  int nMinKF = 10;
+  size_t nMinKF = 10;
   float minTime = 1.0f;
   if (mbMonocular) {
     minTime = 2.0;
@@ -1210,7 +1209,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     return;
   }
 
-  bInitializing = true;
+  mbInitializing = true;
 
   while (CheckNewKeyFrames()) {
     ProcessNewKeyFrame();
@@ -1283,7 +1282,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
   if (mScale < 1e-1) {
     Verbose::Print("LocalMapping", Verbose::WARN, "Scale is too small!");
-    bInitializing = false;
+    mbInitializing = false;
     return;
   }
 
@@ -1429,7 +1428,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   mlNewKeyFrames.clear();
 
   mpTracker->mState = Tracking::OK;
-  bInitializing = false;
+  mbInitializing = false;
   mpCurrentKeyFrame->GetMap()->IncreaseChangeIndex();
 
   return;
@@ -1460,8 +1459,7 @@ void LocalMapping::ScaleRefinement() {
     lpKF.push_back(mpCurrentKeyFrame);
   }
 
-  const int N = vpKF.size();
-
+  // const int N = vpKF.size();
   mRwg = Eigen::Matrix3d::Identity();
   mScale = 1.0;
 
@@ -1471,22 +1469,24 @@ void LocalMapping::ScaleRefinement() {
 
   if (mScale < 1e-1)  // 1e-1
   {
-    cout << "scale too small" << endl;
-    bInitializing = false;
+    mbInitializing = false;
+    Verbose::Print("LocalMapping", Verbose::WARN, "Scale is too small!");
     return;
   }
 
   Sophus::SO3d so3wg(mRwg);
   // Before this line we are not changing the map
   std::unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
-  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+  // std::chrono::steady_clock::time_point t2 =
+  // std::chrono::steady_clock::now();
   if ((fabs(mScale - 1.f) > 0.002) || !mbMonocular) {
     Sophus::SE3f Tgw(mRwg.cast<float>().transpose(), Eigen::Vector3f::Zero());
     mpAtlas->GetCurrentMap()->ApplyScaledRotation(Tgw, mScale, true);
     mpTracker->UpdateFrameIMU(mScale, mpCurrentKeyFrame->GetImuBias(),
                               mpCurrentKeyFrame);
   }
-  std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+  // std::chrono::steady_clock::time_point t3 =
+  // std::chrono::steady_clock::now();
 
   for (auto lit = mlNewKeyFrames.begin(); lit != mlNewKeyFrames.end(); lit++) {
     (*lit)->SetBadFlag();
@@ -1505,7 +1505,7 @@ void LocalMapping::ScaleRefinement() {
 }
 
 bool LocalMapping::IsInitializing() {
-  return bInitializing;
+  return mbInitializing;
 }
 
 double LocalMapping::GetCurrKFTime() {

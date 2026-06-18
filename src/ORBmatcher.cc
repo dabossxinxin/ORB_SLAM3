@@ -1112,10 +1112,10 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const std::vector<MapPoint*>& vpMapPoints,
     pCamera = pKF->mpCamera;
   }
 
-  const float& fx = pKF->fx;
-  const float& fy = pKF->fy;
-  const float& cx = pKF->cx;
-  const float& cy = pKF->cy;
+  // const float& fx = pKF->fx;
+  // const float& fy = pKF->fy;
+  // const float& cx = pKF->cx;
+  // const float& cy = pKF->cy;
   const float& bf = pKF->mbf;
 
   int nFused = 0;
@@ -1211,8 +1211,9 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const std::vector<MapPoint*>& vpMapPoints,
 
       const int& kpLevel = kp.octave;
 
-      if (kpLevel < nPredictedLevel - 1 || kpLevel > nPredictedLevel)
+      if (kpLevel < nPredictedLevel - 1 || kpLevel > nPredictedLevel) {
         continue;
+      }
 
       if (pKF->mvuRight[idx] >= 0) {
         // Check reprojection error in stereo
@@ -1224,8 +1225,9 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const std::vector<MapPoint*>& vpMapPoints,
         const float er = ur - kpr;
         const float e2 = ex * ex + ey * ey + er * er;
 
-        if (e2 * pKF->mvInvLevelSigma2[kpLevel] > 7.8)
+        if (e2 * pKF->mvInvLevelSigma2[kpLevel] > 7.8) {
           continue;
+        }
       } else {
         const float& kpx = kp.pt.x;
         const float& kpy = kp.pt.y;
@@ -1233,15 +1235,16 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const std::vector<MapPoint*>& vpMapPoints,
         const float ey = uv(1) - kpy;
         const float e2 = ex * ex + ey * ey;
 
-        if (e2 * pKF->mvInvLevelSigma2[kpLevel] > 5.99)
+        if (e2 * pKF->mvInvLevelSigma2[kpLevel] > 5.99) {
           continue;
+        }
       }
 
-      if (bRight)
+      if (bRight) {
         idx += pKF->NLeft;
+      }
 
       const cv::Mat& dKF = pKF->mDescriptors.row(idx);
-
       const int dist = DescriptorDistance(dMP, dKF);
 
       if (dist < bestDist) {
@@ -1255,18 +1258,20 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const std::vector<MapPoint*>& vpMapPoints,
       MapPoint* pMPinKF = pKF->GetMapPoint(bestIdx);
       if (pMPinKF) {
         if (!pMPinKF->isBad()) {
-          if (pMPinKF->Observations() > pMP->Observations())
+          if (pMPinKF->Observations() > pMP->Observations()) {
             pMP->Replace(pMPinKF);
-          else
+          } else {
             pMPinKF->Replace(pMP);
+          }
         }
       } else {
         pMP->AddObservation(pKF, bestIdx);
         pKF->AddMapPoint(pMP, bestIdx);
       }
       nFused++;
-    } else
+    } else {
       count_thcheck++;
+    }
   }
 
   return nFused;
@@ -1276,10 +1281,10 @@ int ORBmatcher::Fuse(KeyFrame* pKF, Sophus::Sim3f& Scw,
                      const std::vector<MapPoint*>& vpPoints, float th,
                      std::vector<MapPoint*>& vpReplacePoint) {
   // Get Calibration Parameters for later projection
-  const float& fx = pKF->fx;
-  const float& fy = pKF->fy;
-  const float& cx = pKF->cx;
-  const float& cy = pKF->cy;
+  // const float& fx = pKF->fx;
+  // const float& fy = pKF->fy;
+  // const float& cx = pKF->cx;
+  // const float& cy = pKF->cy;
 
   // Decompose Scw
   Sophus::SE3f Tcw =
@@ -1624,12 +1629,12 @@ int ORBmatcher::SearchByProjection(Frame& CurrentFrame, const Frame& LastFrame,
         Eigen::Vector3f x3Dw = pMP->GetWorldPos();
         Eigen::Vector3f x3Dc = Tcw * x3Dw;
 
-        const float xc = x3Dc(0);
-        const float yc = x3Dc(1);
+        // const float xc = x3Dc(0);
+        // const float yc = x3Dc(1);
         const float invzc = 1.0 / x3Dc(2);
-
-        if (invzc < 0)
+        if (invzc < 0) {
           continue;
+        }
 
         Eigen::Vector2f uv = CurrentFrame.mpCamera->project(x3Dc);
 

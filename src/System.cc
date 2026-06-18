@@ -1039,11 +1039,11 @@ void System::SaveDebugData(const int& initIdx) {
              to_string(initIdx) + ".txt",
          ios_base::app);
   f << fixed;
-  for (int i = 0; i < mpLocalMapper->mcovInertial.rows(); i++) {
-    for (int j = 0; j < mpLocalMapper->mcovInertial.cols(); j++) {
+  for (int i = 0; i < mpLocalMapper->mCovInertial.rows(); i++) {
+    for (int j = 0; j < mpLocalMapper->mCovInertial.cols(); j++) {
       if (j != 0)
         f << ",";
-      f << setprecision(15) << mpLocalMapper->mcovInertial(i, j);
+      f << setprecision(15) << mpLocalMapper->mCovInertial(i, j);
     }
     f << endl;
   }
@@ -1252,7 +1252,7 @@ string System::CalculateCheckSum(string filename, int type) {
 
   MD5_Final(c, &md5Context);
 
-  for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+  for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
     char aux[10];
     sprintf(aux, "%02x", c[i]);
     checksum = checksum + aux;

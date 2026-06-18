@@ -582,16 +582,20 @@ int MapPoint::PredictScale(const float& currentDist, Frame* pF) {
 }
 
 void MapPoint::PrintObservations() {
-  cout << "MP_OBS: MP " << mnId << endl;
+  // Verbose::Print("MapPoint", Verbose::INFO, "MP_OBS: MP %lu", mnId);
+  std::cout << "MP_OBS: MP " << mnId << std::endl;
   for (std::map<KeyFrame*, tuple<int, int>>::iterator
            mit = mObservations.begin(),
            mend = mObservations.end();
        mit != mend; mit++) {
     KeyFrame* pKFi = mit->first;
-    std::tuple<int, int> indexes = mit->second;
-    int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
-    cout << "--OBS in KF " << pKFi->mnId << " in map "
-         << pKFi->GetMap()->GetId() << endl;
+    // std::tuple<int, int> indexes = mit->second;
+    // int leftIndex = get<0>(indexes);
+    // int rightIndex = get<1>(indexes);
+    // Verbose::Print("MapPoint", Verbose::INFO, "--OBS in KF %lu in map %lu",
+    //                pKFi->mnId, pKFi->GetMap()->GetId());
+    std::cout << "--OBS in KF " << pKFi->mnId << " in map "
+              << pKFi->GetMap()->GetId() << std::endl;
   }
 }
 

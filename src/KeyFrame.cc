@@ -397,7 +397,7 @@ void KeyFrame::EraseMapPointMatch(const int& idx) {
 
 void KeyFrame::EraseMapPointMatch(MapPoint* pMP) {
   tuple<size_t, size_t> indexes = pMP->GetIndexInKeyFrame(this);
-  size_t leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
+  int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
   if (leftIndex != -1)
     mvpMapPoints[leftIndex] = static_cast<MapPoint*>(NULL);
   if (rightIndex != -1)
@@ -409,15 +409,17 @@ void KeyFrame::ReplaceMapPointMatch(const int& idx, MapPoint* pMP) {
   mvpMapPoints[idx] = pMP;
 }
 
-set<MapPoint*> KeyFrame::GetMapPoints() {
+std::set<MapPoint*> KeyFrame::GetMapPoints() {
   std::unique_lock<mutex> lock(mMutexFeatures);
-  set<MapPoint*> s;
-  for (size_t i = 0, iend = mvpMapPoints.size(); i < iend; i++) {
-    if (!mvpMapPoints[i])
+  std::set<MapPoint*> s;
+  for (size_t i = 0; i < mvpMapPoints.size(); ++i) {
+    if (!mvpMapPoints[i]) {
       continue;
+    }
     MapPoint* pMP = mvpMapPoints[i];
-    if (!pMP->isBad())
+    if (!pMP->isBad()) {
       s.insert(pMP);
+    }
   }
   return s;
 }
@@ -427,15 +429,17 @@ int KeyFrame::TrackedMapPoints(const int& minObs) {
 
   int nPoints = 0;
   const bool bCheckObs = minObs > 0;
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; ++i) {
     MapPoint* pMP = mvpMapPoints[i];
     if (pMP) {
       if (!pMP->isBad()) {
         if (bCheckObs) {
-          if (mvpMapPoints[i]->Observations() >= minObs)
+          if (mvpMapPoints[i]->Observations() >= minObs) {
             nPoints++;
-        } else
+          }
+        } else {
           nPoints++;
+        }
       }
     }
   }

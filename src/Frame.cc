@@ -301,7 +301,7 @@ Frame::Frame(const cv::Mat& imGray, const cv::Mat& imDepth,
     , mbIsSet(false)
     , mbImuPreintegrated(false)
     , mpCamera(pCamera)
-    , mpCamera2(nullptr)
+    , mpCamera2(NULL)
     , mbHasPose(false)
     , mbHasVelocity(false) {
   // Frame ID

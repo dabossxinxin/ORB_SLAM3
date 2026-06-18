@@ -269,7 +269,8 @@ protected:
   LoopClosing* mpLoopClosing;
 
   // ORB
-  ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
+  ORBextractor* mpORBextractorLeft;
+  ORBextractor* mpORBextractorRight;
   ORBextractor* mpIniORBextractor;
 
   // BoW
@@ -348,21 +349,22 @@ protected:
   // Color order (true RGB, false BGR, ignored if grayscale)
   bool mbRGB;
 
-  list<MapPoint*> mlpTemporalPoints;
+  std::list<MapPoint*> mlpTemporalPoints;
 
   // int nMapChangeIndex;
 
   int mnNumDataset;
 
-  ofstream f_track_stats;
+  std::ofstream f_track_stats;
+  std::ofstream f_track_times;
 
-  ofstream f_track_times;
   double mTime_PreIntIMU;
   double mTime_PosePred;
   double mTime_LocalMapTrack;
   double mTime_NewKF_Dec;
 
-  GeometricCamera *mpCamera, *mpCamera2;
+  GeometricCamera* mpCamera;
+  GeometricCamera* mpCamera2;
 
   int initID, lastID;
 

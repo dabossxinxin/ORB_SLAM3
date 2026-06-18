@@ -32,7 +32,6 @@
 #include "Settings.h"
 #include "Tracking.h"
 
-
 namespace ORB_SLAM3 {
 
 class System;
@@ -84,16 +83,17 @@ public:
 
   std::mutex mMutexImuInit;
 
-  Eigen::MatrixXd mcovInertial;
+  Eigen::MatrixXd mCovInertial;
   Eigen::Matrix3d mRwg;
   Eigen::Vector3d mbg;
   Eigen::Vector3d mba;
+
   double mScale;
   double mInitTime;
   double mCostTime;
 
-  unsigned int mInitSect;
   unsigned int mIdxInit;
+  unsigned int mInitSect;
   unsigned int mnKFs;
   double mFirstTs;
   int mnMatchesInliers;
@@ -101,7 +101,7 @@ public:
   // For debugging (erase in normal mode)
   int mInitFr;
   int mIdxIteration;
-  string strSequence;
+  std::string strSequence;
 
   bool mbNotBA1;
   bool mbNotBA2;
@@ -131,6 +131,7 @@ public:
   int nLBA_exec;
   int nLBA_abort;
 #endif
+
 protected:
   bool CheckNewKeyFrames();
   void ProcessNewKeyFrame();
@@ -184,18 +185,18 @@ protected:
                      bool bFirst = false);
   void ScaleRefinement();
 
-  bool bInitializing;
-
-  Eigen::MatrixXd infoInertial;
   int mNumLM;
   int mNumKFCulling;
 
   float mTinit;
 
   int countRefinement;
+  bool mbInitializing;
+
+  Eigen::MatrixXd infoInertial;
 
   // DEBUG
-  ofstream f_lm;
+  std::ofstream f_lm;
 };
 
 }  // namespace ORB_SLAM3

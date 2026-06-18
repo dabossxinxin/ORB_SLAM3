@@ -55,17 +55,17 @@ Tracking::Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer,
     , mbReadyToInitializate(false)
     , mpSystem(pSys)
     , mpViewer(NULL)
-    , bStepByStep(false)
     , mpFrameDrawer(pFrameDrawer)
     , mpMapDrawer(pMapDrawer)
+    , bStepByStep(false)
     , mpAtlas(pAtlas)
-    , mnLastRelocFrameId(0)
+    , mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
     , mTimeRecentlyLost(5.0)
-    , mnInitialFrameId(0)
-    , mbCreatedMap(false)
     , mnFirstFrameId(0)
-    , mpCamera2(nullptr)
-    , mpLastKeyFrame(static_cast<KeyFrame*>(NULL)) {
+    , mnInitialFrameId(0)
+    , mnLastRelocFrameId(0)
+    , mbCreatedMap(false)
+    , mpCamera2(NULL) {
   // Load camera parameters from settings file
   if (settings) {
     newParameterLoader(settings);
@@ -2043,6 +2043,13 @@ void Tracking::Track() {
 
     if (bOK) {
       mState = OK;
+      Verbose::Print(
+          "Tracking", Verbose::INFO,
+          "Current ts: %.6f, gyro bias: %f, %f, %f, acc bias: %f, %f, %f",
+          mCurrentFrame.mTimeStamp, mCurrentFrame.mImuBias.bwx,
+          mCurrentFrame.mImuBias.bwy, mCurrentFrame.mImuBias.bwz,
+          mCurrentFrame.mImuBias.bax, mCurrentFrame.mImuBias.bay,
+          mCurrentFrame.mImuBias.baz);
     } else if (mState == OK) {
       if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
           mSensor == System::IMU_RGBD) {
@@ -3790,7 +3797,6 @@ void Tracking::InformOnlyTracking(const bool& flag) {
 void Tracking::UpdateFrameIMU(const float s, const IMU::Bias& b,
                               KeyFrame* pCurrentKeyFrame) {
   Map* pMap = pCurrentKeyFrame->GetMap();
-  unsigned int index = mnFirstFrameId;
   std::list<ORB_SLAM3::KeyFrame*>::iterator lRit = mlpReferences.begin();
   std::list<bool>::iterator lbL = mlbLost.begin();
   auto lit = mlRelativeFramePoses.begin();
