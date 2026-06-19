@@ -36,17 +36,17 @@ FrameDrawer::FrameDrawer(Atlas* pAtlas) : both(false), mpAtlas(pAtlas) {
 }
 
 cv::Mat FrameDrawer::DrawFrame(float imageScale) {
-  cv::Mat im;
-  std::vector<cv::KeyPoint>
-      vIniKeys;  // Initialization: KeyPoints in reference frame
-  std::vector<int>
-      vMatches;  // Initialization: correspondeces with reference keypoints
+  std::vector<cv::KeyPoint> vIniKeys;  // Init: KeyPoints in reference frame
+  std::vector<int> vMatches;  // Init: correspondeces with reference keypoints
   std::vector<cv::KeyPoint> vCurrentKeys;  // KeyPoints in current frame
   std::vector<bool> vbVO, vbMap;           // Tracked MapPoints in current frame
   std::vector<std::pair<cv::Point2f, cv::Point2f>> vTracks;
-  int state;  // Tracking state
   std::vector<float> vCurrentDepth;
+
+  cv::Mat im;
   float thDepth;
+  int state;  // Tracking state
+  float imageScaleInv = 1.0 / imageScale;
 
   Frame currentFrame;
   std::vector<MapPoint*> vpLocalMap;
@@ -57,15 +57,16 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
   std::map<long unsigned int, cv::Point2f> mProjectPoints;
   std::map<long unsigned int, cv::Point2f> mMatchedInImage;
 
-  cv::Scalar standardColor(0, 255, 0);
-  cv::Scalar odometryColor(255, 0, 0);
+  cv::Scalar standardColor(0, 255, 0);  // Green
+  cv::Scalar odometryColor(255, 0, 0);  // Blue
 
   // Copy variables within scoped mutex
   {
     std::unique_lock<mutex> lock(mMutex);
     state = mState;
-    if (mState == Tracking::SYSTEM_NOT_READY)
+    if (mState == Tracking::SYSTEM_NOT_READY) {
       mState = Tracking::NO_IMAGES_YET;
+    }
 
     mIm.copyTo(im);
 
@@ -97,22 +98,24 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
   }
 
   if (imageScale != 1.f) {
-    int imWidth = im.cols / imageScale;
-    int imHeight = im.rows / imageScale;
+    int imWidth = im.cols * imageScaleInv;
+    int imHeight = im.rows * imageScaleInv;
     cv::resize(im, im, cv::Size(imWidth, imHeight));
   }
 
-  if (im.channels() < 3)  // this should be always true
-    cvtColor(im, im, cv::COLOR_GRAY2BGR);
+  // this should be always true
+  if (im.channels() < 3) {
+    cv::cvtColor(im, im, cv::COLOR_GRAY2BGR);
+  }
 
-  // Draw
+  // draw something
   if (state == Tracking::NOT_INITIALIZED) {
-    for (unsigned int i = 0; i < vMatches.size(); i++) {
+    for (unsigned int i = 0; i < vMatches.size(); ++i) {
       if (vMatches[i] >= 0) {
         cv::Point2f pt1, pt2;
         if (imageScale != 1.f) {
-          pt1 = vIniKeys[i].pt / imageScale;
-          pt2 = vCurrentKeys[vMatches[i]].pt / imageScale;
+          pt1 = vIniKeys[i].pt * imageScaleInv;
+          pt2 = vCurrentKeys[vMatches[i]].pt * imageScaleInv;
         } else {
           pt1 = vIniKeys[i].pt;
           pt2 = vCurrentKeys[vMatches[i]].pt;
@@ -120,48 +123,152 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
         cv::line(im, pt1, pt2, standardColor);
       }
     }
-    for (std::vector<std::pair<cv::Point2f, cv::Point2f>>::iterator it =
-             vTracks.begin();
-         it != vTracks.end(); it++) {
+    for (auto it = vTracks.begin(); it != vTracks.end(); ++it) {
       cv::Point2f pt1, pt2;
       if (imageScale != 1.f) {
-        pt1 = (*it).first / imageScale;
-        pt2 = (*it).second / imageScale;
+        pt1 = (*it).first * imageScaleInv;
+        pt2 = (*it).second * imageScaleInv;
       } else {
         pt1 = (*it).first;
         pt2 = (*it).second;
       }
       cv::line(im, pt1, pt2, standardColor, 5);
     }
-
-  } else if (state == Tracking::OK)  // TRACKING
-  {
+  } else if (state == Tracking::OK) {
     mnTracked = 0;
     mnTrackedVO = 0;
-    const float r = 5;
-    int n = vCurrentKeys.size();
-    for (int i = 0; i < n; i++) {
+    float radius = 5.0f;
+    for (int i = 0; i < vCurrentKeys.size(); ++i) {
       if (vbVO[i] || vbMap[i]) {
         cv::Point2f pt1, pt2;
         cv::Point2f point;
         if (imageScale != 1.f) {
-          point = vCurrentKeys[i].pt / imageScale;
-          float px = vCurrentKeys[i].pt.x / imageScale;
-          float py = vCurrentKeys[i].pt.y / imageScale;
-          pt1.x = px - r;
-          pt1.y = py - r;
-          pt2.x = px + r;
-          pt2.y = py + r;
+          point = vCurrentKeys[i].pt * imageScaleInv;
+          float px = vCurrentKeys[i].pt.x * imageScaleInv;
+          float py = vCurrentKeys[i].pt.y * imageScaleInv;
+          pt1.x = px - radius;
+          pt1.y = py - radius;
+          pt2.x = px + radius;
+          pt2.y = py + radius;
         } else {
           point = vCurrentKeys[i].pt;
-          pt1.x = vCurrentKeys[i].pt.x - r;
-          pt1.y = vCurrentKeys[i].pt.y - r;
-          pt2.x = vCurrentKeys[i].pt.x + r;
-          pt2.y = vCurrentKeys[i].pt.y + r;
+          pt1.x = vCurrentKeys[i].pt.x - radius;
+          pt1.y = vCurrentKeys[i].pt.y - radius;
+          pt2.x = vCurrentKeys[i].pt.x + radius;
+          pt2.y = vCurrentKeys[i].pt.y + radius;
         }
 
         // This is a match to a MapPoint in the map
         if (vbMap[i]) {
+          cv::rectangle(im, pt1, pt2, standardColor);
+          cv::circle(im, point, 2, standardColor, -1);
+          mnTracked++;
+        } else {  // This is match to a "visual odometry" MapPoint created in
+                  // the last frame
+          cv::rectangle(im, pt1, pt2, odometryColor);
+          cv::circle(im, point, 2, odometryColor, -1);
+          mnTrackedVO++;
+        }
+      }
+    }
+  }
+
+  cv::Mat imWithInfo;
+  DrawTextInfo(im, state, imWithInfo);
+
+  return imWithInfo;
+}
+
+cv::Mat FrameDrawer::DrawRightFrame(float imageScale) {
+  std::vector<cv::KeyPoint> vIniKeys;  // Init: KeyPoints in reference frame
+  std::vector<int> vMatches;  // Init: correspondeces with reference keypoints
+  std::vector<cv::KeyPoint> vCurrentKeys;  // KeyPoints in current frame
+  std::vector<bool> vbVO, vbMap;           // Tracked MapPoints in current frame
+
+  cv::Mat im;
+  int state;  // Tracking state
+  float imageScaleInv = 1.0 / imageScale;
+
+  cv::Scalar standardColor(0, 255, 0);  // Green
+  cv::Scalar odometryColor(255, 0, 0);  // Blue
+
+  // Copy variables within scoped mutex
+  {
+    std::unique_lock<mutex> lock(mMutex);
+    state = mState;
+    if (mState == Tracking::SYSTEM_NOT_READY) {
+      mState = Tracking::NO_IMAGES_YET;
+    }
+
+    mImRight.copyTo(im);
+
+    if (mState == Tracking::NOT_INITIALIZED) {
+      vCurrentKeys = mvCurrentKeysRight;
+      vIniKeys = mvIniKeys;
+      vMatches = mvIniMatches;
+    } else if (mState == Tracking::OK) {
+      vCurrentKeys = mvCurrentKeysRight;
+      vbVO = mvbVO;
+      vbMap = mvbMap;
+    } else if (mState == Tracking::LOST) {
+      vCurrentKeys = mvCurrentKeysRight;
+    }
+  }
+
+  if (imageScale != 1.f) {
+    int imWidth = im.cols * imageScaleInv;
+    int imHeight = im.rows * imageScaleInv;
+    cv::resize(im, im, cv::Size(imWidth, imHeight));
+  }
+
+  // this should be always true
+  if (im.channels() < 3) {
+    cv::cvtColor(im, im, cv::COLOR_GRAY2BGR);
+  }
+
+  // draw something
+  if (state == Tracking::NOT_INITIALIZED) {
+    for (unsigned int i = 0; i < vMatches.size(); ++i) {
+      if (vMatches[i] >= 0) {
+        cv::Point2f pt1, pt2;
+        if (imageScale != 1.f) {
+          pt1 = vIniKeys[i].pt * imageScaleInv;
+          pt2 = vCurrentKeys[vMatches[i]].pt * imageScaleInv;
+        } else {
+          pt1 = vIniKeys[i].pt;
+          pt2 = vCurrentKeys[vMatches[i]].pt;
+        }
+        cv::line(im, pt1, pt2, standardColor);
+      }
+    }
+  } else if (state == Tracking::OK) {
+    mnTracked = 0;
+    mnTrackedVO = 0;
+    float radius = 5;
+    int Nleft = (int)mvCurrentKeys.size();
+
+    for (int i = 0; i < mvCurrentKeysRight.size(); ++i) {
+      if (vbVO[i + Nleft] || vbMap[i + Nleft]) {
+        cv::Point2f pt1, pt2;
+        cv::Point2f point;
+        if (imageScale != 1.f) {
+          point = mvCurrentKeysRight[i].pt * imageScaleInv;
+          float px = mvCurrentKeysRight[i].pt.x * imageScaleInv;
+          float py = mvCurrentKeysRight[i].pt.y * imageScaleInv;
+          pt1.x = px - radius;
+          pt1.y = py - radius;
+          pt2.x = px + radius;
+          pt2.y = py + radius;
+        } else {
+          point = mvCurrentKeysRight[i].pt;
+          pt1.x = mvCurrentKeysRight[i].pt.x - radius;
+          pt1.y = mvCurrentKeysRight[i].pt.y - radius;
+          pt2.x = mvCurrentKeysRight[i].pt.x + radius;
+          pt2.y = mvCurrentKeysRight[i].pt.y + radius;
+        }
+
+        // This is a match to a MapPoint in the map
+        if (vbMap[i + Nleft]) {
           cv::rectangle(im, pt1, pt2, standardColor);
           cv::circle(im, point, 2, standardColor, -1);
           mnTracked++;
@@ -182,148 +289,42 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
   return imWithInfo;
 }
 
-cv::Mat FrameDrawer::DrawRightFrame(float imageScale) {
-  cv::Mat im;
-  std::vector<cv::KeyPoint>
-      vIniKeys;  // Initialization: KeyPoints in reference frame
-  std::vector<int>
-      vMatches;  // Initialization: correspondeces with reference keypoints
-  std::vector<cv::KeyPoint> vCurrentKeys;  // KeyPoints in current frame
-  std::vector<bool> vbVO, vbMap;           // Tracked MapPoints in current frame
-  int state;                               // Tracking state
-
-  // Copy variables within scoped mutex
-  {
-    std::unique_lock<mutex> lock(mMutex);
-    state = mState;
-    if (mState == Tracking::SYSTEM_NOT_READY)
-      mState = Tracking::NO_IMAGES_YET;
-
-    mImRight.copyTo(im);
-
-    if (mState == Tracking::NOT_INITIALIZED) {
-      vCurrentKeys = mvCurrentKeysRight;
-      vIniKeys = mvIniKeys;
-      vMatches = mvIniMatches;
-    } else if (mState == Tracking::OK) {
-      vCurrentKeys = mvCurrentKeysRight;
-      vbVO = mvbVO;
-      vbMap = mvbMap;
-    } else if (mState == Tracking::LOST) {
-      vCurrentKeys = mvCurrentKeysRight;
-    }
-  }  // destroy scoped mutex -> release mutex
-
-  if (imageScale != 1.f) {
-    int imWidth = im.cols / imageScale;
-    int imHeight = im.rows / imageScale;
-    cv::resize(im, im, cv::Size(imWidth, imHeight));
-  }
-
-  if (im.channels() < 3)  // this should be always true
-    cvtColor(im, im, cv::COLOR_GRAY2BGR);
-
-  // Draw
-  if (state == Tracking::NOT_INITIALIZED)  // INITIALIZING
-  {
-    for (unsigned int i = 0; i < vMatches.size(); i++) {
-      if (vMatches[i] >= 0) {
-        cv::Point2f pt1, pt2;
-        if (imageScale != 1.f) {
-          pt1 = vIniKeys[i].pt / imageScale;
-          pt2 = vCurrentKeys[vMatches[i]].pt / imageScale;
-        } else {
-          pt1 = vIniKeys[i].pt;
-          pt2 = vCurrentKeys[vMatches[i]].pt;
-        }
-
-        cv::line(im, pt1, pt2, cv::Scalar(0, 255, 0));
-      }
-    }
-  } else if (state == Tracking::OK)  // TRACKING
-  {
-    mnTracked = 0;
-    mnTrackedVO = 0;
-    const float r = 5;
-    const int n = mvCurrentKeysRight.size();
-    const int Nleft = mvCurrentKeys.size();
-
-    for (int i = 0; i < n; i++) {
-      if (vbVO[i + Nleft] || vbMap[i + Nleft]) {
-        cv::Point2f pt1, pt2;
-        cv::Point2f point;
-        if (imageScale != 1.f) {
-          point = mvCurrentKeysRight[i].pt / imageScale;
-          float px = mvCurrentKeysRight[i].pt.x / imageScale;
-          float py = mvCurrentKeysRight[i].pt.y / imageScale;
-          pt1.x = px - r;
-          pt1.y = py - r;
-          pt2.x = px + r;
-          pt2.y = py + r;
-        } else {
-          point = mvCurrentKeysRight[i].pt;
-          pt1.x = mvCurrentKeysRight[i].pt.x - r;
-          pt1.y = mvCurrentKeysRight[i].pt.y - r;
-          pt2.x = mvCurrentKeysRight[i].pt.x + r;
-          pt2.y = mvCurrentKeysRight[i].pt.y + r;
-        }
-
-        // This is a match to a MapPoint in the map
-        if (vbMap[i + Nleft]) {
-          cv::rectangle(im, pt1, pt2, cv::Scalar(0, 255, 0));
-          cv::circle(im, point, 2, cv::Scalar(0, 255, 0), -1);
-          mnTracked++;
-        } else  // This is match to a "visual odometry" MapPoint created in the
-                // last frame
-        {
-          cv::rectangle(im, pt1, pt2, cv::Scalar(255, 0, 0));
-          cv::circle(im, point, 2, cv::Scalar(255, 0, 0), -1);
-          mnTrackedVO++;
-        }
-      }
-    }
-  }
-
-  cv::Mat imWithInfo;
-  DrawTextInfo(im, state, imWithInfo);
-
-  return imWithInfo;
-}
-
-
 void FrameDrawer::DrawTextInfo(cv::Mat& im, int nState, cv::Mat& imText) {
-  stringstream s;
-  if (nState == Tracking::NO_IMAGES_YET)
-    s << " WAITING FOR IMAGES";
-  else if (nState == Tracking::NOT_INITIALIZED)
-    s << " TRYING TO INITIALIZE ";
-  else if (nState == Tracking::OK) {
-    if (!mbOnlyTracking)
-      s << "SLAM MODE |  ";
-    else
-      s << "LOCALIZATION | ";
+  std::stringstream ss;
+  if (nState == Tracking::NO_IMAGES_YET) {
+    ss << " WAITING FOR IMAGES";
+  } else if (nState == Tracking::NOT_INITIALIZED) {
+    ss << " TRYING TO INITIALIZE ";
+  } else if (nState == Tracking::OK) {
+    if (!mbOnlyTracking) {
+      ss << "SLAM MODE |  ";
+    } else {
+      ss << "LOCALIZATION | ";
+    }
+
     int nMaps = mpAtlas->CountMaps();
     int nKFs = mpAtlas->KeyFramesInMap();
     int nMPs = mpAtlas->MapPointsInMap();
-    s << "Maps: " << nMaps << ", KFs: " << nKFs << ", MPs: " << nMPs
-      << ", Matches: " << mnTracked;
-    if (mnTrackedVO > 0)
-      s << ", + VO matches: " << mnTrackedVO;
+    ss << "Maps: " << nMaps << ", KFs: " << nKFs << ", MPs: " << nMPs
+       << ", Matches: " << mnTracked;
+    if (mnTrackedVO > 0) {
+      ss << ", + VO matches: " << mnTrackedVO;
+    }
   } else if (nState == Tracking::LOST) {
-    s << " TRACK LOST. TRYING TO RELOCALIZE ";
+    ss << " TRACK LOST. TRYING TO RELOCALIZE ";
   } else if (nState == Tracking::SYSTEM_NOT_READY) {
-    s << " LOADING ORB VOCABULARY. PLEASE WAIT...";
+    ss << " LOADING ORB VOCABULARY. PLEASE WAIT...";
   }
 
   int baseline = 0;
   cv::Size textSize =
-      cv::getTextSize(s.str(), cv::FONT_HERSHEY_PLAIN, 1, 1, &baseline);
+      cv::getTextSize(ss.str(), cv::FONT_HERSHEY_PLAIN, 1, 1, &baseline);
 
   imText = cv::Mat(im.rows + textSize.height + 10, im.cols, im.type());
   im.copyTo(imText.rowRange(0, im.rows).colRange(0, im.cols));
   imText.rowRange(im.rows, imText.rows) =
       cv::Mat::zeros(textSize.height + 10, im.cols, im.type());
-  cv::putText(imText, s.str(), cv::Point(5, imText.rows - 5),
+  cv::putText(imText, ss.str(), cv::Point(5, imText.rows - 5),
               cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 255, 255), 1, 8);
 }
 

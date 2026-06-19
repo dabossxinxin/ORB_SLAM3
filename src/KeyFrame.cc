@@ -660,14 +660,14 @@ void KeyFrame::SetBadFlag() {
   }
 
   {
-    std::unique_lock<mutex> lock(mMutexConnections);
-    std::unique_lock<mutex> lock1(mMutexFeatures);
+    std::unique_lock<mutex> lock1(mMutexConnections);
+    std::unique_lock<mutex> lock2(mMutexFeatures);
 
     mConnectedKeyFrameWeights.clear();
     mvpOrderedConnectedKeyFrames.clear();
 
     // Update Spanning Tree
-    set<KeyFrame*> sParentCandidates;
+    std::set<KeyFrame*> sParentCandidates;
     if (mpParent)
       sParentCandidates.insert(mpParent);
 
@@ -730,7 +730,6 @@ void KeyFrame::SetBadFlag() {
     }
     mbBad = true;
   }
-
 
   mpMap->EraseKeyFrame(this);
   mpKeyFrameDB->erase(this);

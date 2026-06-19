@@ -25,16 +25,16 @@ mkdir -p "$RESULTS_DIR"
 
 # Map dataset short name -> folder / timestamp file
 declare -A DATASETS=(
-    #["MH01"]="euroc-mh-01-easy:MH01"
-    #["MH02"]="euroc-mh-02-easy:MH02"
-    #["MH03"]="euroc-mh-03-medium:MH03"
+    ["MH01"]="euroc-mh-01-easy:MH01"
+    ["MH02"]="euroc-mh-02-easy:MH02"
+    ["MH03"]="euroc-mh-03-medium:MH03"
     #["MH04"]="euroc-mh-04-difficult:MH04"
     #["MH05"]="euroc-mh-05-difficult:MH05"
     #["V101"]="euroc-v1-01-easy:V101"
     #["V102"]="euroc-v1-02-medium:V102"
     #["V103"]="euroc-v1-03-difficult:V103"
     #["V201"]="euroc-v2-01-easy:V201"
-    ["V202"]="euroc-v2-02-medium:V202"
+    #["V202"]="euroc-v2-02-medium:V202"
     #["V203"]="euroc-v2-03-difficult:V203"
 )
 

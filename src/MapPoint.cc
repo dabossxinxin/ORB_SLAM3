@@ -28,7 +28,7 @@
 namespace ORB_SLAM3 {
 
 long unsigned int MapPoint::nNextId = 0;
-mutex MapPoint::mGlobalMutex;
+std::mutex MapPoint::mGlobalMutex;
 
 MapPoint::MapPoint()
     : mnFirstKFid(0)
@@ -174,8 +174,8 @@ MapPoint::MapPoint(const Eigen::Vector3f& Pos, Map* pMap, Frame* pFrame,
 }
 
 void MapPoint::SetWorldPos(const Eigen::Vector3f& Pos) {
-  std::unique_lock<mutex> lock2(mGlobalMutex);
-  std::unique_lock<mutex> lock(mMutexPos);
+  std::unique_lock<mutex> lock1(mGlobalMutex);
+  std::unique_lock<mutex> lock2(mMutexPos);
   mWorldPos = Pos;
 }
 
@@ -197,7 +197,7 @@ KeyFrame* MapPoint::GetReferenceKeyFrame() {
 
 void MapPoint::AddObservation(KeyFrame* pKF, int idx) {
   std::unique_lock<mutex> lock(mMutexFeatures);
-  tuple<int, int> indexes;
+  std::tuple<int, int> indexes;
 
   if (mObservations.count(pKF)) {
     indexes = mObservations[pKF];
@@ -225,8 +225,9 @@ void MapPoint::EraseObservation(KeyFrame* pKF) {
   {
     std::unique_lock<mutex> lock(mMutexFeatures);
     if (mObservations.count(pKF)) {
-      tuple<int, int> indexes = mObservations[pKF];
-      int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
+      std::tuple<int, int> indexes = mObservations[pKF];
+      int leftIndex = get<0>(indexes);
+      int rightIndex = get<1>(indexes);
 
       if (leftIndex != -1) {
         if (!pKF->mpCamera2 && pKF->mvuRight[leftIndex] >= 0) {
@@ -240,7 +241,6 @@ void MapPoint::EraseObservation(KeyFrame* pKF) {
       }
 
       mObservations.erase(pKF);
-
       if (mpRefKF == pKF) {
         mpRefKF = mObservations.begin()->first;
       }
@@ -257,7 +257,6 @@ void MapPoint::EraseObservation(KeyFrame* pKF) {
   }
 }
 
-
 std::map<KeyFrame*, std::tuple<int, int>> MapPoint::GetObservations() {
   std::unique_lock<mutex> lock(mMutexFeatures);
   return mObservations;
@@ -269,7 +268,7 @@ int MapPoint::Observations() {
 }
 
 void MapPoint::SetBadFlag() {
-  std::map<KeyFrame*, tuple<int, int>> obs;
+  std::map<KeyFrame*, std::tuple<int, int>> obs;
   {
     std::unique_lock<mutex> lock1(mMutexFeatures);
     std::unique_lock<mutex> lock2(mMutexPos);
@@ -277,11 +276,11 @@ void MapPoint::SetBadFlag() {
     obs = mObservations;
     mObservations.clear();
   }
-  for (std::map<KeyFrame*, tuple<int, int>>::iterator mit = obs.begin(),
-                                                      mend = obs.end();
-       mit != mend; mit++) {
+  for (auto mit = obs.begin(), mend = obs.end(); mit != mend; ++mit) {
     KeyFrame* pKF = mit->first;
-    int leftIndex = get<0>(mit->second), rightIndex = get<1>(mit->second);
+    int leftIndex = get<0>(mit->second);
+    int rightIndex = get<1>(mit->second);
+
     if (leftIndex != -1) {
       pKF->EraseMapPointMatch(leftIndex);
     }

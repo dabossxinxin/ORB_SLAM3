@@ -48,8 +48,8 @@ Map::Map()
 Map::Map(int initKFid)
     : mnInitKFid(initKFid)
     , mnMaxKFid(initKFid)
-    ,
-    /*mnLastLoopKFid(initKFid),*/ mnBigChangeIdx(0)
+    /*mnLastLoopKFid(initKFid)*/
+    , mnBigChangeIdx(0)
     , mIsInUse(false)
     , mHasTumbnail(false)
     , mbBad(false)
@@ -66,14 +66,12 @@ Map::Map(int initKFid)
 }
 
 Map::~Map() {
-  // TODO: erase all points from memory
   mspMapPoints.clear();
-
-  // TODO: erase all keyframes from memory
   mspKeyFrames.clear();
 
-  if (mThumbnail)
+  if (mThumbnail) {
     delete mThumbnail;
+  }
   mThumbnail = static_cast<GLubyte*>(NULL);
 
   mvpReferenceMapPoints.clear();
@@ -123,19 +121,19 @@ void Map::EraseMapPoint(MapPoint* pMP) {
 void Map::EraseKeyFrame(KeyFrame* pKF) {
   std::unique_lock<mutex> lock(mMutexMap);
   mspKeyFrames.erase(pKF);
-  if (mspKeyFrames.size() > 0) {
+  if (!mspKeyFrames.empty()) {
     if (pKF->mnId == mpKFlowerID->mnId) {
       std::vector<KeyFrame*> vpKFs =
           std::vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
-      sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
+      std::sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
       mpKFlowerID = vpKFs[0];
     }
   } else {
-    mpKFlowerID = 0;
+    mpKFlowerID = NULL;
   }
 
   // TODO: This only erase the pointer.
-  // Delete the MapPoint
+  // Delete the KeyFrame
 }
 
 void Map::SetReferenceMapPoints(const std::vector<MapPoint*>& vpMPs) {
@@ -343,7 +341,7 @@ void Map::PreSave(std::set<GeometricCamera*>& spCams) {
     }
     std::map<KeyFrame*, std::tuple<int, int>> mpObs = pMPi->GetObservations();
     for (std::map<KeyFrame*, std::tuple<int, int>>::iterator it = mpObs.begin(),
-                                                        end = mpObs.end();
+                                                             end = mpObs.end();
          it != end; ++it) {
       if (it->first->GetMap() != this || it->first->isBad()) {
         pMPi->EraseObservation(it->first);
